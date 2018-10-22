@@ -1,17 +1,18 @@
 package enjoy.app;
 
+import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-import android.widget.TextView;
 
 import BaseActivity.BaseActivity;
+import ViewModel.MainActivity_ViewModel;
+import enjoy.app.databinding.ActivityMainBinding;
 
 public class MainActivity extends BaseActivity {
 
-    private TextView mTextMessage;
+    private MainActivity_ViewModel viewModel;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -21,13 +22,13 @@ public class MainActivity extends BaseActivity {
             switch (item.getItemId()) {
 
                 case R.id.navigation_home:
-                    mTextMessage.setText(R.string.title_home);
+                    viewModel.Text_Info.Text.set(getResources().getString(R.string.title_home));
                     return true;
                 case R.id.navigation_dashboard:
-                    mTextMessage.setText(R.string.title_dashboard);
+                    viewModel.Text_Info.Text.set(getResources().getString(R.string.title_dashboard));
                     return true;
                 case R.id.navigation_notifications:
-                    mTextMessage.setText(R.string.title_notifications);
+                    viewModel.Text_Info.Text.set(getResources().getString(R.string.title_notifications));
                     return true;
             }
             return false;
@@ -37,9 +38,12 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        viewModel=new MainActivity_ViewModel(this);
+        ActivityMainBinding dataBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        dataBinding.setViewModel(viewModel);
+        viewModel.pushActivity(this);
 
-        mTextMessage = (TextView) findViewById(R.id.message);
+
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
