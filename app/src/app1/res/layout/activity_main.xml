@@ -6,7 +6,7 @@
     <data>
         <variable
             name="viewModel"
-            type="ViewModel.MainActivity_ViewModel" />
+            type="enjoy.ViewModel.MainActivity_ViewModel" />
     </data>
 <LinearLayout
     android:layout_width="match_parent"
@@ -24,12 +24,43 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:scrollbars="vertical"
+        android:id="@+id/scrollView">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@{viewModel.Text_AopInfo.Text}"
+        android:singleLine="false"
+        />
+    </ScrollView>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
 <Button
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:text="@{viewModel.Btn_Msg.Text}"
+    android:text="@{viewModel.Btn_Aop.Text}"
 
-    android:onClick="@{viewModel::Btn_Msg_OnClick}"/>
+    android:onClick="@{viewModel::Btn_Aop_OnClick}"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Msg.Text}"
+            android:layout_marginLeft="40px"
+
+            android:onClick="@{viewModel::Btn_Msg_OnClick}"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Clear.Text}"
+            android:layout_marginLeft="40px"
+
+            android:onClick="@{viewModel::Btn_Clear_OnClick}"/>
+    </LinearLayout>
     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"

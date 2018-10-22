@@ -7,8 +7,9 @@ import android.support.design.widget.BottomNavigationView;
 import android.view.MenuItem;
 
 import BaseActivity.BaseActivity;
-import ViewModel.MainActivity_ViewModel;
+import enjoy.ViewModel.MainActivity_ViewModel;
 import enjoy.app.databinding.ActivityMainBinding;
+
 
 public class MainActivity extends BaseActivity {
 

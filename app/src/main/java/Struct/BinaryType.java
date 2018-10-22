@@ -1,4 +1,4 @@
-package Entity;
+package Struct;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ public class BinaryType {
 	/**
 	 * 构造函数
 	 * @param len 长度
+	 * @param type 数据类型
 	 */
 	public BinaryType(int len, Class<?> type)
 	{

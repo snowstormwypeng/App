@@ -52,7 +52,7 @@ public class Factory {
         }
     }
 
-    public static <T> List<T> GetInstanceList(Class<?> interfaceType, Object[] args)
+    private static <T> List<T> GetInstanceList(Class<?> interfaceType, Object[] args)
     {
         try
         {
