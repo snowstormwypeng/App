@@ -1,26 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
-
-    <data>
-        <variable
-            name="viewModel"
-            type="enjoy.ViewModel.MsgBox_ViewModel" />
-    </data>
-
-<LinearLayout
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="@drawable/dialog_style"
     android:orientation="vertical">
-
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/dialog_style"
+        android:orientation="vertical">
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/dialogtitle_style"
-            android:orientation="horizontal"
             >
 
         <TextView
@@ -30,9 +23,7 @@
             android:layout_marginTop="20dp"
             android:layout_marginRight="30dp"
             android:text="提示"
-            android:height="40dp"
-            android:paddingTop="5dp"
-            android:gravity="left"
+
             android:layout_marginLeft="10dp"
             android:textColor="@color/colorWhite"
             android:textSize="20dp"
@@ -66,45 +57,47 @@
                 android:id="@+id/alertText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
+                android:layout_marginTop="10dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
                 android:textColor="#000"
-                android:textSize="35dp"
+                android:textSize="15dp"
                 android:text="fff"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_marginRight="50px"
-            android:layout_height="40dp"
             android:layout_marginTop="20dp"
+            android:layout_marginRight="40dp"
+            android:layout_height="50dp"
             android:orientation="horizontal"
             android:gravity="right">
             <Button
                 android:id="@+id/btncancel"
-                android:layout_width="100px"
-                android:layout_height="60px"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
 
-                android:layout_marginRight="50px"
+                android:layout_marginRight="50dp"
 
                 android:background="@drawable/style_border"
                 android:textColor="@color/colorPrimary"
-                android:textSize="30px"
+                android:textSize="15dp"
                 android:text="取消"
-                android:visibility="gone"
+
                 tools:ignore="OnClick"/>
             <Button
                 android:id="@+id/btnsuccess"
-                android:layout_width="100px"
-                android:layout_height="60px"
-                android:layout_marginRight="30px"
+                android:layout_width="60dp"
+                android:layout_height="30dp"
+
 
                 android:background="@drawable/style_border_background"
                 android:textColor="#fff"
-                android:textSize="30px"
+                android:textSize="15dp"
                 android:text="确定"
                 tools:ignore="OnClick"/>
         </LinearLayout>
 
 
-
+    </LinearLayout>
 </LinearLayout>
-</layout>
+
