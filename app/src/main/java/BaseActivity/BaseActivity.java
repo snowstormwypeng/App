@@ -37,7 +37,6 @@ import enjoy.app.R;
 public class BaseActivity extends AppCompatActivity {
 
     private IAsynListener callBackListener;
-    protected int TimeOutClose = 30;//自动关闭
     private class OnLongClickListenerImpl implements View.OnLongClickListener {
 
         @Override
@@ -80,28 +79,6 @@ public class BaseActivity extends AppCompatActivity {
                     }
             );
         }
-    }
-   
-    protected void StartAutoClose(int times, TextView btn)
-    {
-        TimeOutClose=times;
-        Message msg=new Message();
-        msg.what=1;
-        msg.obj=btn;
-        //MsgHandle.sendMessage(msg);
-    }
-    protected void StartAutoClose(int times, TextView btn, IAsynListener callBackListener)
-    {
-        TimeOutClose=times;
-        this.callBackListener=callBackListener;
-        Message msg=new Message();
-        msg.what=1;
-        msg.obj=btn;
-        //MsgHandle.sendMessage(msg);
-    }
-    protected void StopAutoClose()
-    {
-        //MsgHandle.sendEmptyMessage(2);
     }
 
     //判断Activity在当前激活状态
@@ -197,9 +174,7 @@ public class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        StopAutoClose();
         Log.d("Activity 休眠",getClass().getName());
-
         super.onPause();
     }
 

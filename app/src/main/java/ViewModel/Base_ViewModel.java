@@ -220,17 +220,17 @@ public class Base_ViewModel extends ContextWrapper {
             public void onFinish(Object sender, Object data) {
                 Toast toast=Toast.makeText(getBaseContext(),info, Toast.LENGTH_LONG);
                 LayoutInflater inflate = (LayoutInflater)getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                View view = inflate.inflate(R.layout.custom_alertdialog, null);
+                //View view = inflate.inflate(R.layout.custom_alertdialog, null);
                 //view.findViewById(R.id.dialogclose).setVisibility(View.GONE);
 
-                TextView tv=(TextView)view.findViewById(R.id.tv_dialog_message);
-                tv.setText(info);
+                //TextView tv=(TextView)view.findViewById(R.id.tv_dialog_message);
+                //tv.setText(info);
                 //tv=(TextView)view.findViewById(R.id.tv_dialog_title);
                 //tv.setText("提示信息");
 //
 //                ImageView image= (ImageView) view.findViewById(R.id.id_image);
 //                image.setImageResource(R.drawable.icon_hint);
-                toast.setView(view);
+                //toast.setView(view);
                 toast.setGravity(Gravity.CENTER,0,50);
                 toast.show();
 
