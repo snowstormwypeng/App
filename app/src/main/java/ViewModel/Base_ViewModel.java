@@ -250,8 +250,8 @@ public class Base_ViewModel extends ContextWrapper {
         public boolean onLongClick(View view) {
             try{
                 if (BuildConfig.DEBUG) {
-//                    SqlliteManage sqlliteManage = new SqlliteManage(view.getContext());
-//                    sqlliteManage.Show();
+                    //SqlliteManage sqlliteManage = new SqlliteManage(view.getContext());
+                    //sqlliteManage.Show();
                 }
             }catch(Exception e){
                 System.out.println(e);

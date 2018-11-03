@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="viewModel"
+            type="ViewModel.DbManage_ViewModel" />
+    </data>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/dialog_style"
+            android:orientation="vertical">
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/dialogtitle_style"
+                >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginRight="30dp"
+                    android:text="@{viewModel.Title.Text}"
+
+                    android:layout_marginLeft="10dp"
+                    android:textColor="@color/colorWhite"
+                    android:textSize="20dp"
+                    android:textStyle="bold" />
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:width="30dp"
+                    android:height="30dp"
+                    android:background="@drawable/style_boder_circle"
+                    android:text="@{viewModel.Btn_Close.Text}"
+                    android:onClick="@{viewModel::Btn_Close_Click}"
+
+                    android:textSize="20dp"
+                    android:textColor="@color/colorPrimary"
+                    />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="40dp"
+                android:gravity="left"
+                >
+                <View
+                    android:layout_width="wrap_content"
+                    android:layout_height="10dp"
+                    android:background="@color/colorPrimary"
+                    >
+
+                </View>
+            </LinearLayout>
+            <ListView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+            </ListView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_marginTop="20dp"
+                android:layout_marginRight="40dp"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="right">
+                <Button
+                    android:layout_width="60dp"
+                    android:layout_height="30dp"
+
+                    android:layout_marginRight="50dp"
+
+                    android:background="@drawable/style_border"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="15dp"
+                    android:text="@{viewModel.Btn_Cancel.Text}"
+                    android:onClick="@{viewModel::Btn_Close_Click}"
+                    android:visibility="@{viewModel.Btn_Cancel.Visible}"
+                    tools:ignore="OnClick"/>
+                <Button
+                    android:layout_width="60dp"
+                    android:layout_height="30dp"
+
+
+                    android:background="@drawable/style_border_background"
+                    android:textColor="#fff"
+                    android:textSize="15dp"
+                    android:text="@{viewModel.Btn_OK.Text}"
+                    android:onClick="@{viewModel::Btn_OK_Click}"
+                    tools:ignore="OnClick"/>
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+</layout>
