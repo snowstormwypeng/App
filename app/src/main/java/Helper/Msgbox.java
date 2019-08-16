@@ -11,7 +11,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import Enums.MsgType;
 import Listener.IAsynListener;
-import enjoy.ViewModel.MsgBox_ViewModel;
+
+import ViewModel.MsgBox_ViewModel;
 import enjoy.app.databinding.AlertDialogBinding;
 
 /**

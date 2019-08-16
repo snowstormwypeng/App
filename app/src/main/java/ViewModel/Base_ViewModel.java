@@ -27,8 +27,8 @@ import java.util.Stack;
 import Entity.RequestPermissionsResult;
 import Listener.IAsynListener;
 import Listener.INetworkListener;
+import enjoy.activitys.NetworkConnectChangedReceiver;
 import enjoy.app.BuildConfig;
-import enjoy.app.NetworkConnectChangedReceiver;
 import enjoy.app.R;
 
 /**

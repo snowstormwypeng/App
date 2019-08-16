@@ -1,4 +1,4 @@
-package enjoy.app;
+package enjoy.activitys;
 
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -7,11 +7,12 @@ import android.support.design.widget.BottomNavigationView;
 import android.view.MenuItem;
 
 import BaseActivity.BaseActivity;
-import enjoy.ViewModel.MainActivity_ViewModel;
+import ViewModel.MainActivity_ViewModel;
+import enjoy.app.R;
 import enjoy.app.databinding.ActivityMainBinding;
 
 
-public class MainActivity extends BaseActivity {
+public class ActivityMain extends BaseActivity {
 
     private MainActivity_ViewModel viewModel;
 
@@ -40,10 +41,9 @@ public class MainActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         viewModel=new MainActivity_ViewModel(this);
-        ActivityMainBinding dataBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        ActivityMainBinding dataBinding =DataBindingUtil.setContentView(this,R.layout.activity_main);
         dataBinding.setViewModel(viewModel);
         viewModel.pushActivity(this);
-
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
