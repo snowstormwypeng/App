@@ -106,10 +106,10 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     private IFaceBrushCallBack FaceEvent= new IFaceBrushCallBack(){
         @Override
         public void call(FaceEntity faceEntity) {
-            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
-            if (sourceBitmapFace != null) {
-                img.setImageBitmap(sourceBitmapFace);
-            }
+//            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
+//            if (sourceBitmapFace != null) {
+//                img.setImageBitmap(sourceBitmapFace);
+//            }
             faceDevice.StopView();
             Message msg=new Message();
             msg.obj=new IAsynListener() {
