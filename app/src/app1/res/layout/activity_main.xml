@@ -38,14 +38,41 @@
     </ScrollView>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-<Button
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="@{viewModel.Btn_Aop.Text}"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_DelAll.Text}"
+            android:layout_marginLeft="40dp"
+            android:onClick="@{viewModel::Btn_DelAll_OnClick}"
+            />
 
-    android:onClick="@{viewModel::Btn_Aop_OnClick}"/>
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_AddVip.Text}"
+            android:layout_marginLeft="40dp"
+            android:onClick="@{viewModel::Btn_AddVip_OnClick}"
+            />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_FaceVerify.Text}"
+            android:layout_marginLeft="40dp"
+            android:onClick="@{viewModel::Btn_FaceVerify_OnClick}"
+            />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Aop.Text}"
+
+            android:onClick="@{viewModel::Btn_Aop_OnClick}"/>
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -60,6 +87,62 @@
             android:layout_marginLeft="40px"
 
             android:onClick="@{viewModel::Btn_Clear_OnClick}"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Scan.Text}"
+            android:onClick="@{viewModel::Btn_Scan_OnClick}"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Gate.Text}"
+            android:onClick="@{viewModel::Btn_Gate_OnClick}"
+            />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <FrameLayout
+            android:layout_width="320px"
+            android:layout_height="240px"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="50dp"
+            android:id="@+id/frame_camera_draw"
+            android:scaleType="fitXY">
+            <SurfaceView
+                android:id="@+id/surfaceViewCamera"
+                android:layout_gravity="center"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" >
+            </SurfaceView>
+
+        </FrameLayout>
+        <FrameLayout
+            android:layout_width="320px"
+            android:layout_height="240px"
+            android:layout_marginTop="30dp"
+            android:layout_marginLeft="50dp"
+            android:scaleType="fitXY">
+            <SurfaceView
+                android:id="@+id/surfaceViewCameraIR"
+                android:layout_gravity="center"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" >
+            </SurfaceView>
+
+        </FrameLayout>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="50dp"
+            android:id="@+id/FaceImg"
+            />
+
     </LinearLayout>
     <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"

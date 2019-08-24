@@ -92,4 +92,8 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     implementation 'com.google.code.gson:gson:2.8.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    implementation files('jars/HSOTG2.0.jar')
+    implementation files('jars/MIPS_AI_Basic_BinocularIDCheckOffline.jar')
+    implementation files('jars/SmdtAccessControl_1_2.jar')
 }
