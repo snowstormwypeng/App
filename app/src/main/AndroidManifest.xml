@@ -47,7 +47,7 @@
             </intent-filter>
         </receiver>
         <receiver android:name="enjoy.activitys.NetworkConnectChangedReceiver" />
-
+        <service android:name="enjoy.Service.MipsIDFaceProService" />
         <activity
             android:name="enjoy.activitys.ActivityMain"
             android:label="@string/app_name">

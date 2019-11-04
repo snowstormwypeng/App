@@ -14,6 +14,17 @@ public class FaceEntity extends BaseEnity {
     private String cardNo;
     private String imgPath;
     private mipsFaceInfoTrack faceInfo;
+    private boolean isVip=false;
+
+    public boolean isVip() {
+        return isVip;
+    }
+
+    public void setVip(boolean vip) {
+        isVip = vip;
+    }
+
+
 
     public String getCardNo() {
         return cardNo;

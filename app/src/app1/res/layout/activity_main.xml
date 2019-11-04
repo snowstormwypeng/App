@@ -62,6 +62,13 @@
             android:layout_marginLeft="40dp"
             android:onClick="@{viewModel::Btn_FaceVerify_OnClick}"
             />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Facecount.Text}"
+            android:layout_marginLeft="40dp"
+            android:onClick="@{viewModel::Btn_Facecount_OnClick}"
+            />
 
     </LinearLayout>
     <LinearLayout
@@ -106,24 +113,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-        <FrameLayout
-            android:layout_width="320px"
-            android:layout_height="240px"
-            android:layout_marginTop="30dp"
-            android:layout_marginLeft="50dp"
-            android:id="@+id/frame_camera_draw"
-            android:scaleType="fitXY">
-            <SurfaceView
-                android:id="@+id/surfaceViewCamera"
-                android:layout_gravity="center"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent" >
-            </SurfaceView>
 
-        </FrameLayout>
         <FrameLayout
-            android:layout_width="320px"
-            android:layout_height="240px"
+            android:layout_width="400px"
+            android:layout_height="700px"
             android:layout_marginTop="30dp"
             android:layout_marginLeft="50dp"
             android:scaleType="fitXY">
@@ -133,7 +126,11 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent" >
             </SurfaceView>
-
+            <enjoy.activitys.FaceCanvasView
+                android:id="@+id/canvasview_draw"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:scaleType="fitXY" />
         </FrameLayout>
 
         <ImageView

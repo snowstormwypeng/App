@@ -8,10 +8,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.os.Message;
+import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ScrollView;
+import android.widget.Toast;
 
 import com.smdt.facesdk.mipsFaceFeature;
 import com.smdt.facesdk.mipsFaceVipDB;
@@ -34,6 +36,7 @@ import enjoy.Device.ScanDevice;
 import enjoy.Interface.IAopDemo;
 import enjoy.InterfaceImpl.AopDemo;
 import enjoy.activitys.ActivityMain;
+import enjoy.activitys.FaceCanvasView;
 import enjoy.activitys.MainActivity;
 import enjoy.app.R;
 
@@ -70,6 +73,7 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     public final EditBind Edt_ScanValue =new EditBind("");
     public final ButtonBind Btn_DelAll=new ButtonBind("删除全部人脸库");
     public final ButtonBind Btn_AddVip=new ButtonBind("添加人脸");
+    public final ButtonBind Btn_Facecount=new ButtonBind("当前人脸库数量");
 
 
     private ImageView img;
@@ -105,26 +109,49 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     }
     private IFaceBrushCallBack FaceEvent= new IFaceBrushCallBack(){
         @Override
-        public void call(FaceEntity faceEntity) {
+        public void call(final FaceEntity faceEntity) {
+            return;
 //            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
 //            if (sourceBitmapFace != null) {
-//                img.setImageBitmap(sourceBitmapFace);
+//                //img.setImageBitmap(sourceBitmapFace);
 //            }
-            faceDevice.StopView();
-            Message msg=new Message();
-            msg.obj=new IAsynListener() {
-                @Override
-                public void onFinish(Object sender, Object data) {
-                    faceDevice.StartView();
-                }
-
-                @Override
-                public void onError(Object sender, Exception e) {
-
-                }
-            };
-            mHandler.sendMessageDelayed(msg,3000);
-
+//
+//            if (faceEntity.isVip()) {
+//
+//                Message m=new Message();
+//                m.obj=new IAsynListener() {
+//                    @Override
+//                    public void onFinish(Object sender, Object data) {
+//                        Msgbox.Show(getBaseContext(),String.format( "扫到会员人脸，卡号：%s",faceEntity.getCardNo()));
+//                    }
+//
+//                    @Override
+//                    public void onError(Object sender, Exception e) {
+//
+//                    }
+//                };
+//                mHandler.sendMessage(m);
+//                faceDevice.StopView();
+//
+//                Message msg = new Message();
+//                msg.obj = new IAsynListener() {
+//                    @Override
+//                    public void onFinish(Object sender, Object data) {
+//                        faceDevice.StartView();
+//                    }
+//
+//                    @Override
+//                    public void onError(Object sender, Exception e) {
+//
+//                    }
+//                };
+//                Log.write("Face","找到会员");
+//                mHandler.sendMessageDelayed(msg, 2000);
+//            }
+//            else
+//            {
+//                Log.write("Face","不是会员");
+//            }
         }
     };
 
@@ -133,9 +160,10 @@ public class MainActivity_ViewModel extends Base_ViewModel {
         try {
 
             faceDevice.EnabledVerify(true);
-            faceDevice.mipsSetLivenessMode(1);
+
+            FaceCanvasView faceCanvasView=(FaceCanvasView)((Activity)getBaseContext()).findViewById(R.id.canvasview_draw);
             faceDevice.start(null,
-                    (SurfaceView)((Activity)getBaseContext()).findViewById(R.id.surfaceViewCameraIR),FaceEvent);
+                    (SurfaceView)((Activity)getBaseContext()).findViewById(R.id.surfaceViewCameraIR),faceCanvasView,FaceEvent);
         }
         catch (Exception e) {
             Msgbox.Show(this,e.getMessage());
@@ -186,20 +214,33 @@ public class MainActivity_ViewModel extends Base_ViewModel {
         Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
         photoPickerIntent.setType("image/*");
         int requestCode=1;
-        ((ActivityMain)getBaseContext()).startActivityForResult(photoPickerIntent,1);
+        ((ActivityMain)getBaseContext()).startActivityForResult(photoPickerIntent, 1);
     }
 
     public void AddVipImg(String imgpath)
     {
-        Bitmap bmp= BitmapFactory.decodeFile(imgpath);
+
 
         try {
-            int vid=faceDevice.addFaceImg(bmp,"2659958626");
-            Msgbox.Show(this.getBaseContext(), "添加成功");
-        } catch (FaceException e) {
+            int vid=faceDevice.addFaceImg(imgpath,"2659958626");
+            //faceDevice.mipsUninit();
+            //faceDevice.Init();
+            if (vid>=0) {
+                Msgbox.Show(this.getBaseContext(), "添加成功");
+            }
+            else
+            {
+                Msgbox.Show(this.getBaseContext(), String.format("添加失败：[%d]",vid));
+            }
+        } catch (Exception e) {
             e.printStackTrace();
             Msgbox.Show(this.getBaseContext(), e.getMessage());
         }
 
+    }
+    public void Btn_Facecount_OnClick(View view)
+    {
+        int c=faceDevice.mipsGetDbFaceCnt();
+        Msgbox.Show(this.getBaseContext(), String.format("当前库人脸数量：[%d]",c));
     }
 }

@@ -1,4 +1,4 @@
-package Helper;
+package enjoy.activitys;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -90,13 +90,13 @@ public class FaceCanvasView extends ImageView {
 
 		// 矩形框
 		mRectPaint = new Paint();
-		mRectPaint.setColor(Color.BLUE);
+		mRectPaint.setColor(Color.GREEN);
 		mRectPaint.setStyle(Paint.Style.STROKE);
-		mRectPaint.setStrokeWidth(8);
+		mRectPaint.setStrokeWidth(1);
 		// 识别名
 		mNamePaint = new Paint();
-		mNamePaint.setColor(Color.BLUE);
-		mNamePaint.setTextSize(30);
+		mNamePaint.setColor(Color.GREEN);
+		mNamePaint.setTextSize(20);
 		mNamePaint.setStyle(Paint.Style.FILL);
 		lockFace.unlock();
 	}
@@ -205,72 +205,13 @@ public class FaceCanvasView extends ImageView {
 		// 清空画布
 		canvas.drawColor(Color.TRANSPARENT, Mode.CLEAR);
 		lockFace.lock();
-		//float dy = mDrawFaceRect.top - 30;
-		// 获取画布长宽
-		/*
-		for (mipsFaceInfoTrack faceinfo : mFaceList) {
 
-			if(faceinfo == null)
-			{
-				continue;
-			}
-
-			if(flgPortrait == 0) {
-				mDrawFaceRect.left = mOverRect.left + (float) faceinfo.faceRect.left * mXRatio;
-				mDrawFaceRect.right = mOverRect.left + (float) faceinfo.faceRect.right * mXRatio;
-				mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.top * mYRatio;
-				mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.bottom * mYRatio;
-			}
-			else if(flgPortrait == 1)
-			{
-				mDrawFaceRect.left = mOverRect.left + (float) (mCameraWidth -faceinfo.faceRect.bottom) * mXRatio;
-				mDrawFaceRect.right = mOverRect.left + (float) (mCameraWidth -faceinfo.faceRect.top) * mXRatio;
-				mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.left * mYRatio;
-				mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.right * mYRatio;
-			}
-			if(flgPortrait == 2) {
-				mDrawFaceRect.left = mOverRect.left + (float) (mCameraWidth -faceinfo.faceRect.right) * mXRatio;
-				mDrawFaceRect.right = mOverRect.left + (float) (mCameraWidth -faceinfo.faceRect.left) * mXRatio;
-				mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight -faceinfo.faceRect.bottom) * mYRatio;
-				mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight -faceinfo.faceRect.top) * mYRatio;
-			}
-			else if(flgPortrait == 3)
-			{
-				mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio;
-				mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio;
-				mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.right) * mYRatio;
-				mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.left) * mYRatio;
-			}
-
-			canvas.drawRect(mDrawFaceRect, mRectPaint);
-			// 画识别名
-			String name = "";
-			
-			if (mState == ANALYSIS_STATE) {
-				if (faceinfo.FaceIdxDB >= 0) {
-					name += "VIP_" + faceinfo.FaceIdxDB;
-					name += ",";
-				}
-				else if(faceinfo.flgSetVIP == 0)
-				{
-					name += "VIP_?";
-					name += ",";
-				}
-				if(faceinfo.flgSetAttr == 1) {
-					String analysisInfo = getGenderAgeInfo(faceinfo);
-					name += analysisInfo;
-				}
-				canvas.drawText(name, mDrawFaceRect.left, mDrawFaceRect.top - 10,
-						mNamePaint);
-			}
-		}*/
 		for (mipsFaceInfoTrack faceinfo : mFaceLivenessList) {
 
 			if(faceinfo == null)
 			{
 				continue;
 			}
-
 			if(flgPortrait == 0) {
 				mDrawFaceRect.left = mOverRect.left + (float) faceinfo.faceRect.left * mXRatio;
 				mDrawFaceRect.right = mOverRect.left + (float) faceinfo.faceRect.right * mXRatio;
@@ -297,7 +238,10 @@ public class FaceCanvasView extends ImageView {
 				mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.right) * mYRatio;
 				mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.left) * mYRatio;
 			}
-
+			mDrawFaceRect.top=mDrawFaceRect.top-20* mXRatio;
+			mDrawFaceRect.left=mDrawFaceRect.left-10* mXRatio;
+			mDrawFaceRect.right=mDrawFaceRect.right-20* mXRatio;
+			mDrawFaceRect.bottom=mDrawFaceRect.bottom+20* mXRatio;
 			canvas.drawRect(mDrawFaceRect, mRectPaint);
 			// 画识别名
 			String name = "";
@@ -307,100 +251,80 @@ public class FaceCanvasView extends ImageView {
 				//name += "检测评分:" + faceinfo.mfaceScore;
 				//name += ",";
 
-				if (faceinfo.livenessDetectedCnt != 0) {
-					name += faceinfo.livenessDetectedCnt;
-					name += ",";
-				}
-
-				if (faceinfo.flgFaceMotionless > 0) {
-					name += "静止";
-					name += ",";
-				}
-				else
-				{
-					name += "运动";
-					name += ",";
-				}
+//				if (faceinfo.livenessDetectedCnt != 0) {
+//					name += faceinfo.livenessDetectedCnt;
+//					name += ",";
+//				}
+//
+//				if (faceinfo.flgFaceMotionless > 0) {
+//					name += "静止";
+//					name += ",";
+//				}
+//				else
+//				{
+//					name += "运动";
+//					name += ",";
+//				}
 
 
 				if (faceinfo.FaceIdxDB >= 0) {
 
-					name += "VIP_" + faceinfo.FaceIdxDB;
-					name += ",";
-					//name += "名字:" + faceinfo.name;
-					name += faceinfo.name;
-					name += ",";
-					//name += "相似度:"+faceinfo.mfaceSimilarity;
-					//name += "相似度:"+String.format("%.2f",faceinfo.mfaceSimilarity);
-					name += String.format("%.2f",faceinfo.mfaceSimilarity);
-					name += ",";
-					//name += "集合:"+faceinfo.similaritySet;
-					name += faceinfo.similaritySet;
-					name += ",";
-					//name += "搜索人数:"+faceinfo.serchFaceCount;
-					name += faceinfo.serchFaceCount;
-					name += ",";
-
-					dy = mDrawFaceRect.top - 100;
+					name += "会员:" + faceinfo.name;
+//					name += faceinfo.name;
+//					name += ",";
+//					//name += "相似度:"+faceinfo.mfaceSimilarity;
+//					//name += "相似度:"+String.format("%.2f",faceinfo.mfaceSimilarity);
+//					name += String.format("%.2f",faceinfo.mfaceSimilarity);
+//					name += ",";
+//					//name += "集合:"+faceinfo.similaritySet;
+//					name += faceinfo.similaritySet;
+//					name += ",";
+//					//name += "搜索人数:"+faceinfo.serchFaceCount;
+//					name += faceinfo.serchFaceCount;
+//					name += ",";
+//
+//					dy = mDrawFaceRect.top - 100;
 				}
 				else if(faceinfo.flgSetVIP == 0)
 				{
-					name += "VIP_?";
-					name += ",";
+					name += "会员：识别中...";
+					//name += ",";
 					dy = mDrawFaceRect.top - 30;
 				}
-				if(faceinfo.flgSetLiveness == 1) {
-					if(faceinfo.flgLiveness == 1)
-					{
-						name += "真人";
-					}
-					else
-					{
-						name += "图片";
-					}
-/*					if(faceinfo.mBitmapFaceIR != null)
-					{
-						name += ",rect:";
-						name += faceinfo.mBitmapFaceIR.getWidth();
-						name += "x";
-						name += faceinfo.mBitmapFaceIR.getHeight();
-					}*/
-					if(faceinfo.mVipSearchTimeDebug > 0)
-					{
-						name += "S:";
-						name += faceinfo.mVipSearchTimeDebug;
-						name += "ms";
-					}
-					if(faceinfo.LivenessTimeDebugDetect > 0)
-					{
-						name += ",D:";
-						name += faceinfo.LivenessTimeDebugDetect;
-					}
-					if(faceinfo.LivenessTimeDebugColor > 0)
-					{
-						name += "ms,color:";
-						name += faceinfo.LivenessTimeDebugColor;
-					}
-					if(faceinfo.LivenessTimeDebugGrey > 0)
-					{
-						name += "ms,grey:";
-						name += faceinfo.LivenessTimeDebugGrey;
-						name += "ms";
-					}
-				}
-				/*
-				if(faceinfo.facePoint != null)
-				{
-					drawtPoint(canvas,faceinfo.facePoint[43],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[44],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[45],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[46],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[80],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[81],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[82],flgPortrait,".");
-					drawtPoint(canvas,faceinfo.facePoint[83],flgPortrait,".");
-				}
-*/
+//				if(faceinfo.flgSetLiveness == 1) {
+//					if(faceinfo.flgLiveness == 1)
+//					{
+//						name += "真人";
+//					}
+//					else
+//					{
+//						name += "图片";
+//					}
+//
+//					if(faceinfo.mVipSearchTimeDebug > 0)
+//					{
+//						name += "S:";
+//						name += faceinfo.mVipSearchTimeDebug;
+//						name += "ms";
+//					}
+//					if(faceinfo.LivenessTimeDebugDetect > 0)
+//					{
+//						name += ",D:";
+//						name += faceinfo.LivenessTimeDebugDetect;
+//					}
+//					if(faceinfo.LivenessTimeDebugColor > 0)
+//					{
+//						name += "ms,color:";
+//						name += faceinfo.LivenessTimeDebugColor;
+//					}
+//					if(faceinfo.LivenessTimeDebugGrey > 0)
+//					{
+//						name += "ms,grey:";
+//						name += faceinfo.LivenessTimeDebugGrey;
+//						name += "ms";
+//					}
+//				}
+
 
 				if(faceinfo.flgSetAttr == 1) {
 					String analysisInfo = getGenderAgeInfo(faceinfo);
@@ -412,24 +336,24 @@ public class FaceCanvasView extends ImageView {
 
 				if(true)
 				{
-					String name1 = "";
-					if(faceinfo.LivenessTimeDebug > 0) {
-						name1 += "活体:"+faceinfo.LivenessTimeDebug;
-						name1 += "ms,";
+					//String name1 = "";
+					if(faceinfo.flgLiveness > 0) {
+						name += "活体:"+faceinfo.LivenessTimeDebug;
+						name += "ms,";
 					}
 					if(faceinfo.vipTimeDebug > 0) {
-						name1 += "vip:"+faceinfo.vipTimeDebug;
-						name1 += "ms,";
+						name += "vip:"+faceinfo.vipTimeDebug;
+						name += "ms,";
 					}
 					if(faceinfo.faceattrTimeDebug > 0) {
-						name1 += "属性:"+faceinfo.faceattrTimeDebug;
-						name1 += "ms,";
+						name += "属性:"+faceinfo.faceattrTimeDebug;
+						name += "ms,";
 					}
 					if(faceinfo.allTimeDebug > 0) {
-						name1 += "总共:"+faceinfo.allTimeDebug;
-						name1 += "ms,";
+						name += "总共:"+faceinfo.allTimeDebug;
+						name += "ms,";
 					}
-					canvas.drawText(name1, mDrawFaceRect.left, mDrawFaceRect.top -30- 10,
+					canvas.drawText(name, mDrawFaceRect.left, mDrawFaceRect.top -30- 10,
 							mNamePaint);
 				}
 			}

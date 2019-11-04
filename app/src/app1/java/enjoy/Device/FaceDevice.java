@@ -1,17 +1,22 @@
 package enjoy.Device;
 
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Environment;
+import android.os.IBinder;
 import android.util.Log;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.widget.CheckBox;
 
 import com.smdt.facesdk.mipsFaceFeature;
 import com.smdt.facesdk.mipsFaceInfoTrack;
@@ -20,57 +25,42 @@ import com.smdt.facesdk.mipsFaceVipDB;
 import com.smdt.facesdk.mipsVideoFaceTrack;
 
 import java.io.File;
-import java.security.PublicKey;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import Helper.FaceCanvasView;
+import Helper.EnjoyTools;
 import Helper.MIPSCamera;
-import Helper.Msgbox;
-import enjoy.activitys.ActivityMain;
-import enjoy.app.R;
+import enjoy.Service.MipsIDFaceProService;
+import enjoy.activitys.FaceCanvasView;
 
-public class FaceDevice extends ContextWrapper {
-    private mipsVideoFaceTrack mfaceTrackLiveness = new mipsVideoFaceTrack();
-    private String VIP_DB_PATH="";
+public class FaceDevice extends ContextWrapper implements ServiceConnection {
+
     private String licPath= Environment.getExternalStorageDirectory().getPath() + "/mipsLic/mipsAi.lic";
-    private static String[] arr_adapter_cam_res={"请接入摄像头"};
 
-    protected int mCameraInit = 0;
+
+
+    private int surface_left=0;
+    private int surface_right=0;
+    private int surface_top=0;
+    private int surface_bottom=0;
+    private int camera_w=0,camera_h=0;
+
     private int mcntCurFace=0;
-    private long timeBak=0;
-    private int framePerSec=0;
-    final int VIP_FACE_CNT_MAX=20000;
-    private volatile boolean mIsTracking=false; // 是否正在进行track操作
-    protected MIPSCamera mMipsCameera=null;
-    protected MIPSCamera mMipsCameeraIR=null;
 
-    int PREVIEW_WIDTH=0;
-    int PREVIEW_HEIGHT=0;
-    private boolean killed = false;
-    private Thread mTrackThread;
-    private byte nv21[];
-    private byte tmp[];
-    private boolean isNV21ready = false;
-    private byte nv21IR[];
-    private byte tmpIR[];
-    private boolean isNV21readyIR = false;
-    private int flgFaceChange;
-    private final Lock lockFaceDb = new ReentrantLock();
-    private final Lock lockFaceInfo = new ReentrantLock();
-    private int mtrackLivenessID=-1;
-    private long timeDebug;
-    private mipsFaceVipDB[] mFaceVipDBArray;
-    private mipsFaceInfoTrack[] mFaceInfoDetected;
-    public List<Camera.Size> mCameraSize;
+    private FaceCanvasView mOverlayCamera=null;
+    private Intent mIntent;
+    private MipsIDFaceProService mipsFaceService;
+    private IFaceBrushCallBack brushEvent;
 
-    private SurfaceHolder mVidioViewHolder = null;
-    private SurfaceHolder mVidioViewIrHolder = null;
-    SurfaceView mSurfaceviewCamera = null;
+    public void Init()throws Exception
+    {
 
-
+    }
     /**
      * 构造函数
      * @param base
@@ -78,35 +68,10 @@ public class FaceDevice extends ContextWrapper {
      */
     public FaceDevice(Context base) throws Exception {
         super(base);
-        int ret = mfaceTrackLiveness .mipsInit(base, 1,0,licPath, 0);
-        if(ret < 0)
-        {
-            Log.d("yunboa","mipsInit failed , ret "  + ret);
-            throw new Exception("初始化失败");
-        }
-        //mfaceTrackLiveness.initFaceDB(context,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
-
-        mfaceTrackLiveness.mipsSetSimilarityThrehold(0.8f);
-        mfaceTrackLiveness.mipsSetFaceWidthThrehold(120);
-        mfaceTrackLiveness.mipsEnableRefreshFaceRect();
-        mfaceTrackLiveness.initFaceDB(base,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
-        mfaceTrackLiveness.mipsEnableVipFaceVerify();
-        mfaceTrackLiveness.mipsEnableFaceMoveDetect();
-        mfaceTrackLiveness.mipsSetFaceMoveRitio_THRESHOLD(25);
-        mfaceTrackLiveness.mipsEnableIDFeatureCropFace();
-        mfaceTrackLiveness.mipsSetIDProCropFaceBorderwidth(50);
-
-        mfaceTrackLiveness.mipsEnableFaceVerifyArea();
-        mfaceTrackLiveness.mipsSetFaceVerifyArea(new Rect(400,100,880,620));
-        mfaceTrackLiveness.mipsFaceVerifyAreaAutoReset();
-
-        mfaceTrackLiveness.mipsSetFaceWidthThrehold(20);
-
-
-
-        VIP_DB_PATH=base.getFilesDir().getAbsolutePath()+File.separator;
-        mfaceTrackLiveness.initFaceDB(base,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
-
+        //Init();
+        mIntent = new Intent(this, MipsIDFaceProService.class);
+        startService(mIntent);
+        bindService(mIntent,this, BIND_AUTO_CREATE);
     }
 
     /***
@@ -115,17 +80,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public void EnabledVerify(boolean enabled)
     {
-        if (enabled)
-        {
-            //通用+活体
-            mfaceTrackLiveness.mipsEnableFaceVerifyArea();
-            mfaceTrackLiveness.mipsSetFaceVerifyArea(new Rect(400,100,880,620));
-            mfaceTrackLiveness.mipsFaceVerifyAreaAutoReset();
-        }
-        else
-        {
-            mfaceTrackLiveness.mipsDisableVipFaceVerify();
-        }
+
     }
 
     /**
@@ -135,7 +90,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int saveFaceDB(String filePath)
     {
-        return mfaceTrackLiveness.saveFaceDB(filePath);
+        return mipsFaceService.mipsAddVipFace(getBaseContext(),filePath);
+
     }
 
     /**
@@ -145,7 +101,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int addPhotoToDB(mipsFaceVipDB vipFac)
     {
-        return mfaceTrackLiveness.addOneFaceToDB(this,vipFac);
+        return mipsFaceService.mfaceTrackLiveness.addOneFaceToDB(this,vipFac);
+
     }
 
 
@@ -163,7 +120,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int addOneFaceToDB(byte[] feature,int idxInFaceDB)
     {
-        return  mfaceTrackLiveness.addOneFaceToDB(this,feature,idxInFaceDB);
+        return mipsFaceService.mfaceTrackLiveness.addOneFaceToDB(this,feature,idxInFaceDB);
+
     }
 
     /**
@@ -173,7 +131,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int deleteOneFaceFrDB(int idxInFaceDB)
     {
-        return mfaceTrackLiveness.deleteOneFaceFrDB(this,idxInFaceDB);
+        return mipsFaceService.mfaceTrackLiveness.deleteOneFaceFrDB(this,idxInFaceDB);
+
     }
 
     /**
@@ -182,7 +141,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int deleteAllFaceFrDB()
     {
-        return mfaceTrackLiveness.deleteAllFaceFrDB(this);
+        return mipsFaceService.mfaceTrackLiveness.deleteAllFaceFrDB(this);
+
     }
 
     /**
@@ -193,7 +153,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public int verifyVipImage(String[] imagePath,int imageCnt)
     {
-        return mfaceTrackLiveness.verifyVipImage(imagePath,imageCnt);
+        return mipsFaceService.mfaceTrackLiveness.verifyVipImage(imagePath,imageCnt);
+
     }
 
     /**
@@ -205,7 +166,8 @@ public class FaceDevice extends ContextWrapper {
      */
     public mipsFaceVerifyInfo verifyVipImage(Bitmap sourceBitmapFace)
     {
-        return mfaceTrackLiveness.verifyVipImage(sourceBitmapFace);
+        return mipsFaceService.mfaceTrackLiveness.verifyVipImage(sourceBitmapFace);
+
     }
 
     /**
@@ -218,7 +180,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public int mipsVerifyInFaceDB(mipsFaceFeature feature)
     {
-        return mfaceTrackLiveness.mipsVerifyInFaceDB(feature);
+        return mipsFaceService.mfaceTrackLiveness.mipsVerifyInFaceDB(feature);
     }
 
     /**
@@ -233,7 +195,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public int mipsVerifyInFaceDB(byte[] frameImage,int frame_width,int frame_height)
     {
-        return mfaceTrackLiveness.mipsVerifyInFaceDB(frameImage,frame_width,frame_height);
+        return mipsFaceService.mfaceTrackLiveness.mipsVerifyInFaceDB(frameImage,frame_width,frame_height);
     }
 
     /**
@@ -243,7 +205,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public mipsFaceFeature mipsGetFeature(Bitmap bitmap)
     {
-        return mfaceTrackLiveness.mipsGetFeature(bitmap);
+        return  mipsFaceService.mfaceTrackLiveness.mipsGetFeature(bitmap);
     }
 
     /**
@@ -255,7 +217,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public mipsFaceFeature mipsGetFeature(byte[] frameImage,int frame_width,int frame_height)
     {
-        return mfaceTrackLiveness.mipsGetFeature(frameImage,frame_width,frame_height);
+        return mipsFaceService.mfaceTrackLiveness.mipsGetFeature(frameImage,frame_width,frame_height);
     }
 
     /**
@@ -264,16 +226,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public int mipsGetDbFaceCnt()
     {
-        return mfaceTrackLiveness.mipsGetDbFaceCnt();
-    }
-
-    /**
-     * 设置活体检测模式；(默认：1)，即快速识别， 仅支持双目
-     * @param mod  1：快速活体识别，仅支持双目 0：非快速活体识别
-     */
-    public void mipsSetLivenessMode(int mod)
-    {
-        mfaceTrackLiveness.mipsSetLivenessMode(mod);
+        return mipsFaceService.mfaceTrackLiveness.mipsGetDbFaceCnt();
     }
 
     /**
@@ -282,19 +235,49 @@ public class FaceDevice extends ContextWrapper {
      */
     public int mipsGetLivenessMode()
     {
-        return mfaceTrackLiveness.mipsGetLivenessMode();
+        return mipsFaceService.mfaceTrackLiveness.mipsGetLivenessMode();
     }
 
+    private void copyFile(String oldPath, String newPath,String FileName) {
+        try {
+            int bytesum = 0;
+            int byteread = 0;
+            File oldfile = new File(oldPath);
+            if (oldfile.exists()) { //文件不存在时
+                String name = oldfile.getName();
+                File targetPath = new File(newPath);
+                if(!targetPath.exists()){
+                    targetPath.mkdirs();
+                }
+
+                InputStream inStream = new FileInputStream(oldPath); //读入原文件
+                FileOutputStream fs = new FileOutputStream(newPath + FileName);
+                byte[] buffer = new byte[1444];
+                int length;
+                while ( (byteread = inStream.read(buffer)) != -1) {
+                    bytesum += byteread; //字节数 文件大小
+                    //System.out.println(bytesum);
+                    fs.write(buffer, 0, byteread);
+
+                }
+                inStream.close();
+            }
+        }
+        catch (Exception e) {
+            System.out.println("复制单个文件操作出错");
+            e.printStackTrace();
+
+        }
+    }
     /**
      * 添加照片到人脸库
-     * @param bmp
+     * @param bmpFileName
      * @param cardNo
      * @return
      * @throws FaceException
      */
-    public int addFaceImg(Bitmap bmp,String cardNo) throws FaceException {
-
-
+    public int addFaceImg(String bmpFileName,String cardNo) throws FaceException {
+        Bitmap bmp= BitmapFactory.decodeFile(bmpFileName);
         mipsFaceFeature info;
         try {
             info = mipsGetFeature(bmp);
@@ -304,10 +287,13 @@ public class FaceDevice extends ContextWrapper {
         int id = mipsVerifyInFaceDB(info);
         if (id == -3) {
             id = mipsGetDbFaceCnt();
-            //String imgpath = Environment.getExternalStorageDirectory().getPath() + String.format("/faceVIP/imageVIP/%s.jpg", memberNo);
+            String imgpath = Environment.getExternalStorageDirectory().getPath() + "/faceVIP/imageVIP/";
+            copyFile(bmpFileName,imgpath,cardNo+".jpg");
             mipsFaceVipDB faceVipImg = new mipsFaceVipDB(cardNo, id, bmp);
-            faceVipImg.setVipID(0);
+            faceVipImg.imagePath=imgpath+cardNo+".jpg";
+            faceVipImg.setVipID(1);
             id = addPhotoToDB(faceVipImg);
+            //id =addOneFaceToDB(info.mfaceFeature,id);
             return id;
         }
         if (id >= 0) {
@@ -319,12 +305,9 @@ public class FaceDevice extends ContextWrapper {
     //获取VIP人脸校验状态
     public int mipsGetFaceLivenessState()
     {
-        if(mfaceTrackLiveness == null) {
-            return -1;
-        }
-        mipsSetLivenessMode(1);
+
         EnabledVerify(true);
-        return mfaceTrackLiveness.mipsGetFaceLivenessState();
+        return mipsFaceService.mfaceTrackLiveness.mipsGetFaceLivenessState();
     }
 
     /**
@@ -332,7 +315,7 @@ public class FaceDevice extends ContextWrapper {
      */
     public void mipsUninit()
     {
-        mfaceTrackLiveness.mipsUninit();
+        mipsFaceService.mfaceTrackLiveness.mipsUninit();
     }
 
 
@@ -365,210 +348,14 @@ public class FaceDevice extends ContextWrapper {
 
         return -1;
     }
-    private Camera.PreviewCallback mMipsCameeraCall = new Camera.PreviewCallback() {
-            @Override
-            public void onPreviewFrame(byte[] data, Camera camera) {
-                if (data == null) {
-                    return; // 切分辨率的过程中可能这个地方的data为空
-                }
-                if (!mIsTracking) {
-                    synchronized (nv21) {
-                        try {
-                            isNV21ready = true;
-                            System.arraycopy(data, 0, nv21, 0, data.length);
-                            isNV21ready = true;
-                        }
-                        catch (Exception e)
-                        {
-                            e.printStackTrace();
-                        }
-                        //Log.i(TAG, "onPreviewFrame: " + data);
-                    }
-                    synchronized (mTrackThread) {
-                        mTrackThread.notify();
-                    }
-                }
-                mMipsCameera.addCallbackBuffer(data); // 将此预览缓冲数据添加到相机预览缓冲数据队列里
-            }
-        };
-    private Camera.PreviewCallback mMipsCameeraIrCall = new Camera.PreviewCallback() {
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
-            if (data == null) {
-                return; // 切分辨率的过程中可能这个地方的data为空
-            }
-            if(nv21IR == null) {
-                nv21IR = new byte[data.length];
-            }
-            if(tmpIR == null) {
-                tmpIR = new byte[data.length];
-            }
-            if (!mIsTracking) {
-                synchronized (nv21IR) {
-                    System.arraycopy(data, 0, nv21IR, 0, data.length);
-                    isNV21readyIR = true;
-                    //Log.i(TAG, "onPreviewFrame: " + data);
-                }
-                synchronized (mTrackThread) {
-                    mTrackThread.notify();
-                }
-            }
-            mMipsCameeraIR.addCallbackBuffer(data); // 将此预览缓冲数据添加到相机预览缓冲数据队列里
-        }
-    };
 
-    private int openCamera()
-    {
-
-        int cameraCount =  Camera.getNumberOfCameras();
-        Log.d("whw","输出相机的数量" +cameraCount);
-        if(mCameraInit != 0)
-        {
-            return cameraCount;
-        }
-
-        if(mMipsCameera == null)
-        {
-            mMipsCameera = new MIPSCamera();
-            mMipsCameera.setPreviewCallback(mMipsCameeraCall);
-        }
-        if(mMipsCameera != null ){
-            //mMipsCameera.openCamera1(CameraInfo.CAMERA_FACING_BACK);
-            mMipsCameera.openCamera1(MIPSCamera.CameraFacing);
-        }
-
-
-
-        if(mMipsCameeraIR == null && cameraCount >1 )
-        {
-            mMipsCameeraIR = new MIPSCamera();
-            mMipsCameeraIR.setPreviewCallback(mMipsCameeraIrCall);
-        }
-        if(mMipsCameeraIR != null ){
-            //mMipsCameeraIR.openCamera1(CameraInfo.CAMERA_FACING_FRONT);
-            if(MIPSCamera.CameraFacing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                mMipsCameeraIR.openCamera1(Camera.CameraInfo.CAMERA_FACING_BACK);
-            }
-            else
-            {
-                mMipsCameeraIR.openCamera1(Camera.CameraInfo.CAMERA_FACING_FRONT);
-            }
-        }
-
-        return cameraCount;
-    }
-    private int checkCameraSize(int w, int h)
-    {
-        if(mCameraSize == null)
-        {
-            return -1;
-        }
-        for(int i=0; i<mCameraSize.size();i++)
-        {
-            if((mCameraSize.get(i).width == w) && (mCameraSize.get(i).height == h))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private SurfaceHolder.Callback mSurfaceCallback = new SurfaceHolder.Callback() {
-
-        @Override
-        public void surfaceCreated(SurfaceHolder holder) {
-            if(mMipsCameera != null){
-                if(holder != null)
-                {
-
-
-                }
-                else
-                {
-                    mMipsCameera.startPreview(null);
-                }
-            }
-
-        }
-
-        @Override
-        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-        }
-
-        @Override
-        public void surfaceDestroyed(SurfaceHolder holder) {
-
-        }
-    };
-
-    private int startCamera(int width, int height, SurfaceHolder holder, SurfaceHolder holderIR, int rotation)
-    {
-        if(mCameraInit != 0)
-        {
-            return 0;
-        }
-        if(width > 0 && height > 0)
-        {
-            PREVIEW_WIDTH = width;
-            PREVIEW_HEIGHT = height;
-        }
-
-        mMipsCameera.initPreviewSize(PREVIEW_WIDTH,PREVIEW_HEIGHT);
-        if(mCameraInit==0 ) {
-            int cameraCount = Camera.getNumberOfCameras();
-            if(mMipsCameera != null){
-                if(holder != null)
-                {
-                    //mMipsCameera.openCamera(Camera.CameraInfo.CAMERA_FACING_BACK,PREVIEW_WIDTH,PREVIEW_HEIGHT);
-                    mMipsCameera.initPreviewBuffer();
-                    mMipsCameera.setCameraDisplayOrientation(rotation);
-                    mMipsCameera.startPreview(mVidioViewHolder);
-
-                    if(mVidioViewHolder != null ) {
-                        mVidioViewHolder.addCallback(mSurfaceCallback);
-                    }
-                }
-                else
-                {
-                    mMipsCameera.initPreviewBuffer();
-                    mMipsCameera.setCameraDisplayOrientation(rotation);
-                    mMipsCameera.startPreview(null);
-
-                }
-            }
-            if(mMipsCameeraIR != null && cameraCount > 1) {
-                mMipsCameeraIR.initPreviewSize(PREVIEW_WIDTH, PREVIEW_HEIGHT);
-                if (holderIR != null) {
-                    //mMipsCameera.openCamera(Camera.CameraInfo.CAMERA_FACING_BACK,PREVIEW_WIDTH,PREVIEW_HEIGHT);
-                    mMipsCameeraIR.initPreviewBuffer();
-                    mMipsCameeraIR.setCameraDisplayOrientation(rotation);
-                    mMipsCameeraIR.startPreview(mVidioViewIrHolder);
-                    //openCamera(CameraFacing,mSurfaceHolderDisplay);
-                } else {
-                    //mMipsCameera.openCamera(Camera.CameraInfo.CAMERA_FACING_BACK,PREVIEW_WIDTH,PREVIEW_HEIGHT);
-                    mMipsCameeraIR.initPreviewBuffer();
-                    mMipsCameeraIR.setCameraDisplayOrientation(rotation);
-                    mMipsCameeraIR.startPreview(null);
-                    //openCamera(CameraFacing,mSurfaceHolder);
-                }
-            }
-        }
-
-
-        mCameraInit =1;
-        nv21 = new byte[PREVIEW_WIDTH * PREVIEW_HEIGHT * 2];
-        tmp = new byte[PREVIEW_WIDTH * PREVIEW_HEIGHT * 2];
-        return 0;
-    }
 
     /**
      * 停止当前的画面
      */
     public void StopView()
     {
-        mMipsCameera.stopPreview();
-        mMipsCameeraIR.stopPreview();
+
     }
 
     /**
@@ -576,18 +363,55 @@ public class FaceDevice extends ContextWrapper {
      */
     public void StartView()
     {
-        mMipsCameera.startPreview(mVidioViewHolder);
-        mMipsCameeraIR.startPreview(mVidioViewIrHolder);
 
-        mMipsCameera.initPreviewBuffer();
-        mMipsCameera.setCameraDisplayOrientation(0);
-
-        mMipsCameeraIR.initPreviewBuffer();
-        mMipsCameeraIR.setCameraDisplayOrientation(0);
     }
-
-    public void start(SurfaceView vidioView, SurfaceView vidioViewIr, final IFaceBrushCallBack brushEvent)
+    private void setCameraState(int state)
     {
+        if(state == 0)
+        {
+            if(mipsFaceService != null)
+            {
+                mipsFaceService.mipsSetTrackLandscape();
+            }
+            //mOverlayCamera.setOverlayRect(surface_left, surface_right, surface_top, surface_bottom, camera_w,camera_h);
+            //mOverlayCamera.setCavasLandscape();
+        }
+        else if(state == 1)
+        {
+            if(mipsFaceService != null)
+            {
+                mipsFaceService.mipsSetTrackPortrait();
+            }
+
+            //mOverlayCamera.setOverlayRect(surface_left, surface_right, surface_top, surface_bottom,camera_h, camera_w);
+            //mOverlayCamera.setCavasPortrait();
+        }
+        else if(state == 2)
+        {
+            if(mipsFaceService != null)
+            {
+                mipsFaceService.mipsSetTrackReverseLandscape();
+            }
+
+            //mOverlayCamera.setOverlayRect(surface_left, surface_right, surface_top, surface_bottom, camera_w,camera_h);
+            //mOverlayCamera.setCavasReverseLandscape();
+        }
+        else if(state == 3)
+        {
+            if(mipsFaceService != null)
+            {
+                mipsFaceService.mipsSetTrackReversePortrait();
+            }
+
+            //mOverlayCamera.setOverlayRect(surface_left, surface_right, surface_top, surface_bottom,camera_h, camera_w);
+            //mOverlayCamera.setCavasReversePortrait();
+        }
+    }
+    public void start(SurfaceView vidioView, SurfaceView vidioViewIr, FaceCanvasView faceCanvas, final IFaceBrushCallBack brushEvent)
+    {
+        SurfaceHolder mVidioViewHolder = null;
+        SurfaceHolder mVidioViewIrHolder = null;
+
         if (vidioView!=null) {
             mVidioViewHolder = vidioView.getHolder();
         }
@@ -595,97 +419,84 @@ public class FaceDevice extends ContextWrapper {
         {
             mVidioViewIrHolder = vidioViewIr.getHolder();
         }
-        int camcnt=openCamera();
-        isNV21readyIR = true;
-        startCamera(1280,720,mVidioViewHolder,mVidioViewIrHolder,0);
+        if (faceCanvas!=null)
+        {
+            mOverlayCamera=faceCanvas;
+            mOverlayCamera.setCavasReversePortrait();
+            mOverlayCamera.setOverlayRect(vidioViewIr.getLeft(),vidioViewIr.getRight(),vidioViewIr.getTop(),vidioViewIr.getBottom(),720,1280);
 
-        mipsSetLivenessMode(1);
 
-         mTrackThread = new Thread() {
+        }
+
+        this.brushEvent=brushEvent;
+        int res= mipsFaceService.startDetect(getBaseContext(),licPath,1280,720,
+                mVidioViewHolder,mVidioViewIrHolder,
+                3,getAssets(),"2");
+        if (res>=0)
+        {
+            mOverlayCamera=faceCanvas;
+            mipsFaceService.mipsSetOverlay(faceCanvas);
+            setCameraState(3);
+            mipsFaceService.mfaceTrackLiveness.mipsSetTrackReversePortrait();
+        }
+    }
+
+    @Override
+    public void onServiceConnected(ComponentName componentName, IBinder service) {
+        MipsIDFaceProService.Binder binder = (MipsIDFaceProService.Binder) service;
+        mipsFaceService = binder.getService();
+        mipsFaceService.registPoseCallback(new MipsIDFaceProService.PoseCallBack() {
             @Override
-            public void run() {
+            public void onPosedetected(final String flag, final int curFaceCnt, final int cntFaceDB, final mipsFaceInfoTrack[] faceInfo)
+            {
                 try {
-                    while (!killed) {
-                        if (( isNV21readyIR && mipsGetFaceLivenessState() > 1)||
-                                (isNV21ready && mipsGetFaceLivenessState() < 2)) {
-                            mIsTracking = true;
-                            synchronized (nv21) {
-                                System.arraycopy(nv21, 0, tmp, 0, nv21.length);
-                            }
+                    Helper.Log.write("FaceCheck", String.format("真人：%d  VIP:%d  facedbID:%d", faceInfo[0].flgLiveness,
+                            faceInfo[0].flgSetVIP, faceInfo[0].FaceIdxDB));
+                    mcntCurFace = mipsFaceService.mfaceTrackLiveness.mipsGetFaceCnt();
+                    if (mcntCurFace == 1 && faceInfo[0].flgLiveness == 1) {
+                        if (mOverlayCamera != null) {
+                            mOverlayCamera.addFacesLiveness(faceInfo, FaceCanvasView.ANALYSIS_STATE);
 
-                            if(mMipsCameeraIR != null && mipsGetFaceLivenessState()>1){
-                                if((nv21IR == null)||(tmpIR == null))
-                                {
-                                    continue;
-                                }
-                                synchronized (nv21IR) {
-                                    System.arraycopy(nv21IR, 0, tmpIR, 0, nv21IR.length);
-                                }
-                                lockFaceDb.lock();
-                                flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, tmpIR, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
-                                lockFaceDb.unlock();
-                            }else
-                            {
-                                lockFaceDb.lock();
-                                flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
-                                lockFaceDb.unlock();
-                            }
-
-                            if (timeBak == 0) {
-                                timeBak = System.currentTimeMillis();
-                            }
-                            if ((System.currentTimeMillis() - timeBak) > 1000) {
-                                //Log.i(TAG, "frameRate: " + framePerSec);
-                                framePerSec = 0;
-                                timeBak = System.currentTimeMillis();
-                            }
-                            framePerSec++;
-
-                            if (flgFaceChange == 1) {
-
-                                mcntCurFace = mfaceTrackLiveness.mipsGetFaceCnt();
-                                if (mcntCurFace==1) {
-                                    //mdbFaceCnt = mfaceTrackLiveness.mipsGetDbFaceCnt();
-                                    mFaceInfoDetected = mfaceTrackLiveness.mipsGetFaceInfoDetected();
-                                    if (mipsGetFaceLivenessState() > 0) {
-                                        mtrackLivenessID = getLivenessTrackID(mFaceInfoDetected);
-                                    }
-                                    if (brushEvent != null && mFaceInfoDetected[0].flgSetVIP>0
-                                            && mFaceInfoDetected[0].name!=null
-                                            && (!mFaceInfoDetected[0].name.equals("")) ) {
-                                        FaceEntity faceEntity = new FaceEntity();
-                                        String vid=String.format("%d",mFaceInfoDetected[0].flgSetVIP);
-                                        faceEntity.setCardNo(mFaceInfoDetected[0].name);
-                                        faceEntity.setFaceInfo(mFaceInfoDetected[0]);
-                                        String path= Environment.getExternalStorageDirectory().getPath() + "/faceVIP/imageVIP" + '/' +faceEntity.getCardNo() + ".jpg";
-                                        faceEntity.setImgPath(path);
-                                        brushEvent.call(faceEntity);
-                                    }
-                                }
-                                else
-                                {
-
-                                }
-                                //timeDebug = System.currentTimeMillis();
-                                //画脸轮廓
-                            }
-                            mIsTracking = false;
-                            isNV21ready = false;
-                            isNV21readyIR = false;
+                            mOverlayCamera.postInvalidate();
                         }
-                        else {
-                            synchronized (this) {
-                                mTrackThread.wait(100); // 数据没有准备好就等待
+
+                        if (brushEvent != null) {
+                            FaceEntity faceEntity = new FaceEntity();
+
+                            if (faceInfo != null && faceInfo[0] != null && faceInfo[0].flgSetVIP > 0
+                                    && faceInfo[0].name != null
+                                    && (!faceInfo[0].name.equals(""))) {
+                                faceEntity.setCardNo(faceInfo[0].name);
+                                faceEntity.setVip(faceInfo[0].flgSetVIP > 0);
+                                String path = Environment.getExternalStorageDirectory().getPath() + "/faceVIP/imageVIP" + '/' + faceEntity.getCardNo() + ".jpg";
+                                faceEntity.setImgPath(path);
                             }
+                            faceEntity.setFaceInfo(faceInfo[0]);
+
+                            brushEvent.call(faceEntity);
                         }
+                    } else {
+
                     }
-                    //Log.i(TAG, "mTrackThread exit: ");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    //stopThread();
+                }
+                catch (Exception e)
+                {
+
                 }
             }
-        };
-        mTrackThread.start();
+        });
+        refreshCamera();
+    }
+
+    @Override
+    public void onServiceDisconnected(ComponentName componentName) {
+
+    }
+    public int refreshCamera()
+    {
+        int camcnt=mipsFaceService.openCamera();
+
+        return camcnt;
     }
 }
+
