@@ -1,4 +1,4 @@
-package Helper;
+package enjoy.Device;
 
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
@@ -43,6 +43,7 @@ public class MIPSCamera {
 
     public void openCamera1(int mCameraFacing) throws RuntimeException {
         releaseCamera();
+        CameraFacing=mCameraFacing;
         //mPreviewWidth = width;
         //mPreviewHeight = height;
         Camera.CameraInfo info = new Camera.CameraInfo();

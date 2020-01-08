@@ -10,8 +10,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
+import android.os.Message;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -30,32 +31,45 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import Exceptions.EException;
 import Helper.EnjoyTools;
-import Helper.MIPSCamera;
-import enjoy.Service.MipsIDFaceProService;
+import Helper.Log;
+
+import Listener.IAsynListener;
+import Service.MipsIDFaceProService;
+//import enjoy.Service.MipsIDFaceProService;
 import enjoy.activitys.FaceCanvasView;
+import enjoy.app.BuildConfig;
 
 public class FaceDevice extends ContextWrapper implements ServiceConnection {
 
     private String licPath= Environment.getExternalStorageDirectory().getPath() + "/mipsLic/mipsAi.lic";
 
-
-
-    private int surface_left=0;
-    private int surface_right=0;
-    private int surface_top=0;
-    private int surface_bottom=0;
-    private int camera_w=0,camera_h=0;
-
     private int mcntCurFace=0;
 
     private FaceCanvasView mOverlayCamera=null;
     private Intent mIntent;
-    private MipsIDFaceProService mipsFaceService;
+    public MipsIDFaceProService mipsFaceService;
     private IFaceBrushCallBack brushEvent;
+    public String VipImagePath= Environment.getExternalStorageDirectory().getPath() + "/" + BuildConfig.FLAVOR + "/faceVIP";
+    private String LastCardNo="";
+    private long LastSendTime=0;
+    private Context ctx;
+    //FaceCardDataAccess faceCardDataAccess;
+
+    public Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (msg.obj instanceof IAsynListener) {
+                ((IAsynListener) msg.obj).onFinish(this, msg.arg1);
+            }
+        }
+    };
 
     public void Init()throws Exception
     {
@@ -69,6 +83,8 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
     public FaceDevice(Context base) throws Exception {
         super(base);
         //Init();
+        ctx = base;
+        //faceCardDataAccess = new FaceCardDataAccess(getBaseContext());
         mIntent = new Intent(this, MipsIDFaceProService.class);
         startService(mIntent);
         bindService(mIntent,this, BIND_AUTO_CREATE);
@@ -82,6 +98,77 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
     {
 
     }
+    /**
+     * 验证人脸特征是否匹配
+     * @param feature1
+     * @param feature2
+     * @return
+     */
+    public boolean mipsVerifyID(mipsFaceFeature feature1, mipsFaceFeature feature2) {
+        if (mipsFaceService.mfaceTrackLiveness.mipsVerifyID(feature1,feature2) > 0.8){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    //根据卡号删除人脸特征
+    public int deleteFaceByCardNo(String cardNo)throws EException {
+
+        //获取库中卡号对应的人脸照片
+        String imgpath =VipImagePath + "/"+cardNo+".jpg";
+        Bitmap bmp = BitmapFactory.decodeFile(imgpath);
+
+        //获取旧照片人脸特征
+        mipsFaceFeature info;
+        try {
+            info = mipsGetFeature(bmp);
+        } catch (Exception e) {
+            throw new EException(1,"删除照片时旧人脸库照片未识别到有效人脸特征");
+        }
+        if (info == null) {
+            throw new EException(1,"删除照片时旧人脸库照片未识别到有效人脸特征");
+        }
+
+        //校验人脸库,获取id
+        int id = mipsVerifyInFaceDB(info);
+        if (id < 0){
+            throw new EException(2,"删除照片时校验旧照片校验是否在人脸库中失败["+id+"]");
+        }
+
+        //删除人脸库
+        int res = deleteOneFaceFrDB(id);
+        if (res != 0){
+            throw new EException(2,"删除旧人脸库照片失败["+res+"]");
+        }
+        Helper.Log.write("FaceDevice","删除人脸库照片成功["+cardNo+"]");
+        //EnjoyTools.DeleteFile(imgpath);
+        return 0;
+    }
+
+
+    //删除人脸特征
+    public int deleteFaceByFeature(String cardNo,mipsFaceFeature info)throws EException {
+
+        //获取库中卡号对应的人脸照片
+        String imgpath =VipImagePath + "/"+cardNo+".jpg";
+
+        //校验人脸库,获取id
+        int id = mipsVerifyInFaceDB(info);
+        if (id < 0){
+            throw new EException(2,"删除照片时校验旧照片校验是否在人脸库中失败["+id+"]");
+        }
+
+        //删除人脸库
+        int res = deleteOneFaceFrDB(id);
+        if (res != 0){
+            throw new EException(2,"删除旧人脸库照片失败["+res+"]");
+        }
+        Helper.Log.write("FaceDevice","删除人脸库照片成功["+cardNo+"]");
+        //EnjoyTools.DeleteFile(imgpath);
+        return 0;
+    }
+
 
     /**
      * 保存当前人脸到文件
@@ -101,7 +188,8 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
      */
     public int addPhotoToDB(mipsFaceVipDB vipFac)
     {
-        return mipsFaceService.mfaceTrackLiveness.addOneFaceToDB(this,vipFac);
+        return 0;
+        //return mipsFaceService.addPhotoToDB(this,vipFac);//.mfaceTrackLiveness.addOneFaceToDB(this,vipFac);
 
     }
 
@@ -141,8 +229,15 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
      */
     public int deleteAllFaceFrDB()
     {
-        return mipsFaceService.mfaceTrackLiveness.deleteAllFaceFrDB(this);
-
+        if (mipsFaceService!=null && mipsFaceService.mfaceTrackLiveness!=null) {
+            //EnjoyTools.DeleteDir(VipImagePath);
+            Helper.Log.write("FaceDevice","删除全部人脸库成功");
+            return mipsFaceService.mfaceTrackLiveness.deleteAllFaceFrDB(this);
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     /**
@@ -226,7 +321,13 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
      */
     public int mipsGetDbFaceCnt()
     {
-        return mipsFaceService.mfaceTrackLiveness.mipsGetDbFaceCnt();
+        if (mipsFaceService!=null && mipsFaceService.mfaceTrackLiveness!=null) {
+            return mipsFaceService.mfaceTrackLiveness.mipsGetDbFaceCnt();
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     /**
@@ -251,7 +352,7 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
                 }
 
                 InputStream inStream = new FileInputStream(oldPath); //读入原文件
-                FileOutputStream fs = new FileOutputStream(newPath + FileName);
+                FileOutputStream fs = new FileOutputStream(newPath + "/" + FileName);
                 byte[] buffer = new byte[1444];
                 int length;
                 while ( (byteread = inStream.read(buffer)) != -1) {
@@ -276,31 +377,76 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
      * @return
      * @throws FaceException
      */
-    public int addFaceImg(String bmpFileName,String cardNo) throws FaceException {
-        Bitmap bmp= BitmapFactory.decodeFile(bmpFileName);
-        mipsFaceFeature info;
-        try {
-            info = mipsGetFeature(bmp);
-        } catch (Exception e) {
-            throw new FaceException(1, "该照片没有有效的人脸特征");
+    public int addFaceImg(String bmpFileName,String cardNo,byte[] faceFeature) throws EException {
+        //删除重复卡号
+//        FaceCard faceCard = faceCardDataAccess.queryByCardNo(cardNo);
+//        if (faceCard != null){
+//            //删除人脸库
+//            deleteOneFaceFrDB(faceCard.getId());
+//
+//            //删除数据库
+//            try {
+//                faceCardDataAccess.deleteFaceCard(faceCard);
+//            } catch (Exception e){
+//                e.printStackTrace();
+//                throw new EException("删除数据库失败");
+//            }
+//
+//            //删除照片
+//            EnjoyTools.DeleteFile(VipImagePath + "/"+cardNo+".jpg");
+//        }
+
+        if (faceFeature == null) {
+            Bitmap bmp= BitmapFactory.decodeFile(bmpFileName);
+            mipsFaceFeature info;
+            try {
+                info = mipsGetFeature(bmp);
+            } catch (Exception e) {
+                Helper.Log.write("addFaceImg", String.format("该照片没有有效的人脸特征:%s",cardNo));
+                return 0;
+            }
+            if (info == null) {
+                Helper.Log.write("addFaceImg", String.format("该照片没有有效的人脸特征:%s",cardNo));
+                return 0;
+            }
+            faceFeature = info.mfaceFeature;
         }
-        int id = mipsVerifyInFaceDB(info);
-        if (id == -3) {
-            id = mipsGetDbFaceCnt();
-            String imgpath = Environment.getExternalStorageDirectory().getPath() + "/faceVIP/imageVIP/";
-            copyFile(bmpFileName,imgpath,cardNo+".jpg");
-            mipsFaceVipDB faceVipImg = new mipsFaceVipDB(cardNo, id, bmp);
-            faceVipImg.imagePath=imgpath+cardNo+".jpg";
-            faceVipImg.setVipID(1);
-            id = addPhotoToDB(faceVipImg);
-            //id =addOneFaceToDB(info.mfaceFeature,id);
-            return id;
+
+
+        //若人脸库存在此特征则删除人脸库人脸
+        mipsFaceFeature feature = new mipsFaceFeature(faceFeature,null);
+        int faceId = mipsVerifyInFaceDB(feature);
+        if (faceId >= 0){
+            //删除人脸库
+            deleteOneFaceFrDB(faceId);
         }
-        if (id >= 0) {
-            throw new FaceException(1, "该人脸已存在");
-        } else {
-            return id;
-        }
+
+
+        //添加人脸库
+//        int id=Integer.valueOf(String.format("%s%d",String.valueOf(EnjoyTools.GetTimestamp()).substring(8), new Random().nextInt(999)));
+//        int res = addOneFaceToDB(faceFeature,id);
+//        if (res>=0) {
+//            Helper.Log.write("addFaceImg", "该照片添加成功：" + cardNo);
+//        } else {
+//            Helper.Log.write("addFaceImg", "该照片添加失败：" + cardNo);
+//        }
+//
+//        //添加FaceCard库
+//        faceCard = new FaceCard();
+//        faceCard.setId(id);
+//        faceCard.setCardNo(cardNo);
+//        try{
+//            faceCardDataAccess.Insert(faceCard);
+//        } catch (Exception e){
+//            e.printStackTrace();
+//            throw new EException("删除数据库失败");
+//        }
+//
+//        //添加照片
+//        copyFile(bmpFileName,VipImagePath,cardNo+".jpg");
+//
+
+        return 0;
     }
     //获取VIP人脸校验状态
     public int mipsGetFaceLivenessState()
@@ -363,8 +509,18 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
      */
     public void StartView()
     {
-
+       // mipsFaceService.mMipsCameera.startPreview(mipsFaceService.mSurfaceHolder);
+        //mipsFaceService.mMipsCameera.initPreviewBuffer();
     }
+
+    public void setCavasOverlay(SurfaceView vidioView){
+        if (mOverlayCamera != null) {
+            mOverlayCamera.reset();
+            mOverlayCamera.setCavasReversePortrait();
+            mOverlayCamera.setOverlayRect(vidioView.getLeft(), vidioView.getRight(), vidioView.getTop(), vidioView.getBottom(), 720, 1280);
+        }
+    }
+
     private void setCameraState(int state)
     {
         if(state == 0)
@@ -407,39 +563,59 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
             //mOverlayCamera.setCavasReversePortrait();
         }
     }
-    public void start(SurfaceView vidioView, SurfaceView vidioViewIr, FaceCanvasView faceCanvas, final IFaceBrushCallBack brushEvent)
+    public void start(SurfaceView vidioView,  FaceCanvasView faceCanvas,int rotation, final IFaceBrushCallBack brushEvent)
     {
         SurfaceHolder mVidioViewHolder = null;
-        SurfaceHolder mVidioViewIrHolder = null;
 
         if (vidioView!=null) {
             mVidioViewHolder = vidioView.getHolder();
         }
-        if (vidioViewIr!=null)
-        {
-            mVidioViewIrHolder = vidioViewIr.getHolder();
-        }
         if (faceCanvas!=null)
         {
+            faceCanvas.reset();
             mOverlayCamera=faceCanvas;
             mOverlayCamera.setCavasReversePortrait();
-            mOverlayCamera.setOverlayRect(vidioViewIr.getLeft(),vidioViewIr.getRight(),vidioViewIr.getTop(),vidioViewIr.getBottom(),720,1280);
-
-
+            mOverlayCamera.setOverlayRect(vidioView.getLeft(),vidioView.getRight(),vidioView.getTop(),vidioView.getBottom(),720,1280);
         }
 
         this.brushEvent=brushEvent;
-        int res= mipsFaceService.startDetect(getBaseContext(),licPath,1280,720,
-                mVidioViewHolder,mVidioViewIrHolder,
-                3,getAssets(),"2");
+        int res;
+
+//        res= mipsFaceService.startDetect(getBaseContext(),licPath,1280,720,
+//                    null,mVidioViewHolder,
+//                    rotation,getAssets(),"2",VipImagePath);
+        res= mipsFaceService.startDetect(getApplicationContext(), licPath, 1280, 720,
+                mVidioViewHolder,null, 3,getAssets(),"2");
         if (res>=0)
         {
             mOverlayCamera=faceCanvas;
             mipsFaceService.mipsSetOverlay(faceCanvas);
-            setCameraState(3);
-            mipsFaceService.mfaceTrackLiveness.mipsSetTrackReversePortrait();
+            setCameraState(rotation);
+            if (BuildConfig.FLAVOR.equals("tv1080")) {
+                mipsFaceService.mfaceTrackLiveness.mipsSetTrackPortrait();
+            }
+            //mipsFaceService.mfaceTrackLiveness.mipsSetTrackReversePortrait();
+            mipsFaceService.mfaceTrackLiveness.mipsSetPitchAngle(15f);
+            mipsFaceService.mfaceTrackLiveness.mipsDisableFaceVerifyArea();
+            mipsFaceService.mfaceTrackLiveness.mipsSetMaxVipVerifyCntThrehold(3);
+
+            //设置/获取照片人脸置信度阈值 （可设置范围 0.1~1.0，推荐 0.9~0.99）最大 0.8
+            mipsFaceService.mfaceTrackLiveness.mipsSetVerifyScoreThrehold((float)0.6);
+
+            //设置/获取人脸跟踪人脸置信度 阈值（可设置范围 0.1~1.0，推 荐 0.9~0.99）
+            mipsFaceService.mfaceTrackLiveness.mipsSetFaceScoreThrehold((float)0.6);
+
+            //设置/获取人脸对比相似度阈值 （（可设置范围 0.1~1.0，推荐 0.5~0.8））
+            mipsFaceService.mfaceTrackLiveness.mipsSetSimilarityThrehold((float)0.5);
+
+            mipsFaceService.mipsEnableRefreshFaceVIP();
         }
     }
+
+    public void setFaceEvent(IFaceBrushCallBack brushEvent) {
+        this.brushEvent=brushEvent;
+    }
+
 
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder service) {
@@ -450,9 +626,19 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
             public void onPosedetected(final String flag, final int curFaceCnt, final int cntFaceDB, final mipsFaceInfoTrack[] faceInfo)
             {
                 try {
-                    Helper.Log.write("FaceCheck", String.format("真人：%d  VIP:%d  facedbID:%d", faceInfo[0].flgLiveness,
-                            faceInfo[0].flgSetVIP, faceInfo[0].FaceIdxDB));
-                    mcntCurFace = mipsFaceService.mfaceTrackLiveness.mipsGetFaceCnt();
+                    if (mcntCurFace!=curFaceCnt)
+                    {
+                        if (brushEvent != null) {
+                            mcntCurFace=curFaceCnt;
+                            brushEvent.faceEvent(curFaceCnt);
+                        }
+                    }
+                    if (curFaceCnt==0 || faceInfo.length <= 0 || faceInfo[0] == null ) {
+                        return;
+                    }
+                    Log.d("brushFace", String.format("flgSetVIP：%d   FaceIdxDB：%d  flgLiveness:%d   flgSetLiveness:%d",
+                            faceInfo[0].flgSetVIP, faceInfo[0].FaceIdxDB,faceInfo[0].flgLiveness,faceInfo[0].flgSetLiveness));
+                    mcntCurFace = curFaceCnt;
                     if (mcntCurFace == 1 && faceInfo[0].flgLiveness == 1) {
                         if (mOverlayCamera != null) {
                             mOverlayCamera.addFacesLiveness(faceInfo, FaceCanvasView.ANALYSIS_STATE);
@@ -461,27 +647,62 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
                         }
 
                         if (brushEvent != null) {
-                            FaceEntity faceEntity = new FaceEntity();
+                            final FaceEntity faceEntity = new FaceEntity();
+                            if (faceInfo[0].flgSetLiveness == 1) {
+                                switch (faceInfo[0].FaceIdxDB) {
+                                    case -1: {
+                                        if ((System.currentTimeMillis() - LastSendTime) / 1000 >= 10) {
+                                            LastSendTime = System.currentTimeMillis();
+
+                                            faceEntity.setVip(false);
+                                            faceEntity.setCardNo("0");
+                                            faceEntity.setImgPath("");
+                                            brushEvent.call(faceEntity);
+                                        }
+                                        break;
+                                    }
+                                    default: {
+                                        break;
+                                    }
+                                }
+                            }
 
                             if (faceInfo != null && faceInfo[0] != null && faceInfo[0].flgSetVIP > 0
                                     && faceInfo[0].name != null
                                     && (!faceInfo[0].name.equals(""))) {
-                                faceEntity.setCardNo(faceInfo[0].name);
-                                faceEntity.setVip(faceInfo[0].flgSetVIP > 0);
-                                String path = Environment.getExternalStorageDirectory().getPath() + "/faceVIP/imageVIP" + '/' + faceEntity.getCardNo() + ".jpg";
-                                faceEntity.setImgPath(path);
+//                                FaceCard faceCard = faceCardDataAccess.queryById(Integer.valueOf(faceInfo[0].name));
+//                                if (faceCard == null) {
+//                                    deleteOneFaceFrDB(Integer.valueOf(faceInfo[0].name));
+//                                }
+//                                faceEntity.setCardNo(faceCard.getCardNo());
+//                                faceEntity.setVip(faceInfo[0].flgSetVIP > 0);
+//                                String path = VipImagePath + "/" + faceCard.getCardNo() + ".jpg";
+//                                faceEntity.setImgPath(path);
                             }
                             faceEntity.setFaceInfo(faceInfo[0]);
+                            Message msg = new Message();
+                            msg.arg1 = 1;
+                            msg.obj = new IAsynListener() {
+                                @Override
+                                public void onFinish(Object sender, Object data) {
+                                    brushEvent.call(faceEntity);
+                                }
 
-                            brushEvent.call(faceEntity);
+                                @Override
+                                public void onError(Object sender, Exception e) {
+
+                                }
+                            };
+                            mHandler.sendMessage(msg);
                         }
-                    } else {
+                    }
+                    else {
 
                     }
                 }
                 catch (Exception e)
                 {
-
+                    e.printStackTrace();
                 }
             }
         });
@@ -499,4 +720,3 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
         return camcnt;
     }
 }
-

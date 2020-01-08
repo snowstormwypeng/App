@@ -109,6 +109,11 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     }
     private IFaceBrushCallBack FaceEvent= new IFaceBrushCallBack(){
         @Override
+        public void  faceEvent(int faceCnt)
+        {
+
+        }
+        @Override
         public void call(final FaceEntity faceEntity) {
             return;
 //            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
@@ -162,8 +167,8 @@ public class MainActivity_ViewModel extends Base_ViewModel {
             faceDevice.EnabledVerify(true);
 
             FaceCanvasView faceCanvasView=(FaceCanvasView)((Activity)getBaseContext()).findViewById(R.id.canvasview_draw);
-            faceDevice.start(null,
-                    (SurfaceView)((Activity)getBaseContext()).findViewById(R.id.surfaceViewCameraIR),faceCanvasView,FaceEvent);
+            faceDevice.start((SurfaceView)((Activity)getBaseContext()).findViewById(R.id.surfaceViewCameraIR),faceCanvasView,3,
+                    FaceEvent);
         }
         catch (Exception e) {
             Msgbox.Show(this,e.getMessage());
@@ -222,7 +227,7 @@ public class MainActivity_ViewModel extends Base_ViewModel {
 
 
         try {
-            int vid=faceDevice.addFaceImg(imgpath,"2659958626");
+            int vid=faceDevice.addFaceImg(imgpath,"2659958626",null);
             //faceDevice.mipsUninit();
             //faceDevice.Init();
             if (vid>=0) {

@@ -1,4 +1,4 @@
-package enjoy.Service;
+package Service;
 
 import android.app.Service;
 import android.content.Context;
@@ -20,21 +20,23 @@ import android.view.SurfaceView;
 import android.view.WindowManager;
 
 import com.smdt.deviceauth.Auth;
+import com.smdt.facesdk.mipsFaceFeature;
 import com.smdt.facesdk.mipsFaceInfoTrack;
 import com.smdt.facesdk.mipsFaceVerifyInfo;
 import com.smdt.facesdk.mipsFaceVipDB;
 import com.smdt.facesdk.mipsVideoFaceTrack;
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import Helper.MIPSCamera;
 import enjoy.activitys.FaceCanvasView;
+import enjoy.Device.MIPSCamera;
 
 /**
  * Created by Guasszjg on 2016/12/26 0026.
@@ -139,15 +141,10 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT
         );
-        try {
-            layoutParams.gravity = Gravity.LEFT | Gravity.TOP;
-            windowManager.addView(surfaceView, layoutParams);
-            mSurfaceHolder.addCallback(this);
-        }
-        catch (Exception e)
-        {
+//        layoutParams.gravity = Gravity.LEFT | Gravity.TOP;
+//        windowManager.addView(surfaceView, layoutParams);
+//        mSurfaceHolder.addCallback(this);
 
-        }
     }
 
     @Override
@@ -274,7 +271,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         return null;
     }
 
-    public int startCamera(int width, int height, SurfaceHolder holder, SurfaceHolder holderIR, int rotation)
+    public int startCamera(int width, int height,SurfaceHolder holder,SurfaceHolder holderIR,int rotation)
     {
         if(mCameraInit != 0)
         {
@@ -395,7 +392,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         return -1;
     }
 
-    public int initDetect(final Context context, String licPath, AssetManager assetManager , final String choose_alg , int distanceType, int degree)
+    public int initDetect(final Context context, String licPath, AssetManager assetManager , final String choose_alg , int distanceType,int degree)
     {
         mfaceTrackLiveness = new mipsVideoFaceTrack();
         int ret = -1;
@@ -412,24 +409,24 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             ret=mfaceTrackLiveness.mipsInit(context,distanceType,licPath);
             Log.d("yunboa"," initDetect , mipsInit ret :" +ret);
         }*/
-        livenessflg= Integer.parseInt(choose_alg);
+        livenessflg=Integer.parseInt(choose_alg);
+
+        mfaceTrackLiveness.mipsSetTrackConfig106();
+        mfaceTrackLiveness.mipsSetDetectorConfig106();
 
         ret=mfaceTrackLiveness.mipsInit(context, distanceType,degree,licPath, livenessflg);
         if(ret < 0)
         {
             Log.d("yunboa","mipsInit failed , ret "  + ret);
-            return -1;
+            return ret;
         }
-        VIP_DB_PATH=context.getFilesDir().getAbsolutePath()+ File.separator;
+        VIP_DB_PATH=context.getFilesDir().getAbsolutePath()+File.separator;
         //mfaceTrackLiveness.initFaceDB(context,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
 
         mfaceTrackLiveness.mipsSetSimilarityThrehold(0.8f);
         mfaceTrackLiveness.mipsSetFaceWidthThrehold(120);
         mfaceTrackLiveness.mipsEnableRefreshFaceRect();
-//        mfaceTrackLiveness.initFaceDB(context,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
-        VIP_DB_PATH=getBaseContext().getFilesDir().getAbsolutePath()+File.separator;
         mfaceTrackLiveness.initFaceDB(context,VIP_DB_PATH+"mipsVipFaceDB",VIP_DB_PATH+"image",1);
-
         mfaceTrackLiveness.mipsEnableVipFaceVerify();
         mfaceTrackLiveness.mipsEnableFaceMoveDetect();
         mfaceTrackLiveness.mipsSetFaceMoveRitio_THRESHOLD(25);
@@ -438,8 +435,10 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
 
         //通用+活体
         mfaceTrackLiveness.mipsEnableFaceVerifyArea();
-        mfaceTrackLiveness.mipsSetFaceVerifyArea(new Rect(400,100,880,620));
+        //  mfaceTrackLiveness.mipsSetFaceVerifyArea(new Rect(400,100,880,620));
+        mfaceTrackLiveness.mipsSetFaceVerifyArea(new Rect(200,50,500,400));
         mfaceTrackLiveness.mipsFaceVerifyAreaAutoReset();
+
 
         killed = false;
 
@@ -541,7 +540,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
                             synchronized (this) {
                                 mTrackThread.wait(100); // 数据没有准备好就等待
                             }
-                       }
+                        }
                     }
                     Log.i(TAG, "mTrackThread exit: ");
                 } catch (InterruptedException e) {
@@ -593,27 +592,28 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         return 0;
     }
 
-    public int startDetect(Context context, String licPath, int width, int height, SurfaceHolder holder, SurfaceHolder holderIR, int rotation, AssetManager assetManager, String choose_alg)
+    public int startDetect(Context context, String licPath, int width, int height, SurfaceHolder holder, SurfaceHolder holderIR,
+                           int rotation, AssetManager assetManager,String choose_alg)
     {
         int ret=0;
-         if(((PREVIEW_WIDTH!= width) || (PREVIEW_HEIGHT!=height)))
-         {
-             if(mfaceTrackLiveness == null)
-             {
-                 Log.d("whw", "nihao"+ choose_alg);
-                 ret = initDetect(context,licPath,assetManager,choose_alg ,1,rotation);
-             }
-             if(ret < 0)
-             {
-                 mfaceTrackLiveness = null;
-                 return ret;
-             }
-             if(mCameraInit != 0)
-             {
-                 stopCamera();
-             }
-             startCamera(width,height,holder,holderIR,rotation);
-         }
+        if(((PREVIEW_WIDTH!= width) || (PREVIEW_HEIGHT!=height)))
+        {
+            if(mfaceTrackLiveness == null)
+            {
+                Log.d("whw", "nihao"+ choose_alg);
+                ret = initDetect(context,licPath,assetManager,choose_alg ,1,rotation);
+            }
+            if(ret < 0)
+            {
+                mfaceTrackLiveness = null;
+                return ret;
+            }
+            if(mCameraInit != 0)
+            {
+                stopCamera();
+            }
+            startCamera(width,height,holder,holderIR,rotation);
+        }
 
         return 0;
     }
@@ -963,7 +963,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
 
     //获取VIP人脸校验状态
-    public int mipsAddVipFace(Context context, String imagePath, int cnt, boolean flgCopyImageFile)
+    public int mipsAddVipFace(Context context,String imagePath,int cnt,boolean flgCopyImageFile)
     {
         lockFaceInfo.lock();
 
@@ -1005,7 +1005,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
 
     //获取VIP人脸校验状态
-    public int mipsAddVipFace(Context context, String imagePath)
+    public int mipsAddVipFace(Context context,String imagePath)
     {
         lockFaceInfo.lock();
 
@@ -1038,7 +1038,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         lockFaceInfo.unlock();
         return ret;
     }
-    public void mipsSetSurface(SurfaceHolder holder, SurfaceHolder holderIR)
+    public void mipsSetSurface(SurfaceHolder holder,SurfaceHolder holderIR)
     {
         try {
             Log.i(TAG, "SurfaceHolder.Callback?surface Created");
@@ -1054,7 +1054,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
                 Log.i("yunboa2" , "mipsSetSurface mMipsCameeraIR");
             }
         } catch (Exception ex) {
-			Log.i(TAG + "initCamera", ex.getMessage());
+            Log.i(TAG + "initCamera", ex.getMessage());
             Log.e("yunboa2" , "mipsSetSurface setPreviewDisplay error");
         }
     }
@@ -1062,6 +1062,9 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     public void mipsSetOverlay(FaceCanvasView overlay)
     {
         mOverlayCamera = overlay;
+        if(mOverlayCamera != null) {
+            mOverlayCamera.setFaceVerifyRect(mfaceTrackLiveness.mipsGetFaceVerifyArea());
+        }
     }
 
     public long mipsGetTimeDebug()
@@ -1091,7 +1094,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
 
     //获取VIP人脸校验状态
-    public int mipsDeleteVipFace(Context context, int idxInFaceDB)
+    public int mipsDeleteVipFace(Context context,int idxInFaceDB)
     {
         lockFaceInfo.lock();
 
@@ -1114,7 +1117,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         return ret;
     }
 
-    public  static String mipsGetDeviceInfo(Context context)
+    public  static  String mipsGetDeviceInfo(Context context)
     {
         String deviceInfo=null;
 
@@ -1176,7 +1179,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     public void mipsSetTrackReversePortrait()
     {
         if(mfaceTrackLiveness != null) {
-            mfaceTrackLiveness.mipsSetTrackReversePortrait();
+            mfaceTrackLiveness.mipsSetTrackPortrait();
             if(mMipsCameera != null) {
                 mMipsCameera.setCameraDisplayOrientation(3);
             }
@@ -1295,7 +1298,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
 
     //获取实时刷新VIP状态
-    public int mipsStartLoopInit(final Context context, final String licPath, final int second)
+    public int mipsStartLoopInit(final  Context context, final String licPath, final int second)
     {
    /*
         String pathFile=context.getFilesDir().getAbsolutePath();
@@ -1349,7 +1352,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
     */
 
-    public float mipsCompareFeatureInfaceDb(Context context , int userId1, int userId2) {
+    public float mipsCompareFeatureInfaceDb(Context context ,int userId1, int userId2) {
 
         lockFaceInfo.lock();
         float ret= 1; //mfaceTrackLiveness.mipsCompareFeatureInfaceDb(context,userId1,userId2);
@@ -1379,8 +1382,23 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
     public mipsFaceVerifyInfo verifyVipImage(Bitmap bitmap){
         if(mfaceTrackLiveness != null){
-           return mfaceTrackLiveness.verifyVipImage(bitmap);
+            return mfaceTrackLiveness.verifyVipImage(bitmap);
         }
         return null;
+    }
+
+    public mipsFaceFeature mipsGetFeature(Bitmap bitmap){
+        if(mfaceTrackLiveness != null){
+            return mfaceTrackLiveness.mipsGetFeature(bitmap);
+        }
+        return null;
+    }
+
+    public int mipsAddVipFace(Context context, byte[] feature , int index){
+        if(mfaceTrackLiveness != null) {
+            return mfaceTrackLiveness.addOneFaceToDB(context, feature, index);
+        }
+        return -1;
+
     }
 }

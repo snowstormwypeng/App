@@ -14,4 +14,8 @@ public class Log {
     {
         android.util.Log.d(tag,log);
     }
+    public static void d(String tag, String log)
+    {
+        write(tag,log);
+    }
 }

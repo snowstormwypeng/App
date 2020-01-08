@@ -9,4 +9,5 @@ package enjoy.Device;
 
 public interface IFaceBrushCallBack {
     void call(FaceEntity faceEntity);
+    void faceEvent(int faceCnt);
 }
