@@ -423,15 +423,15 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
 
 
         //添加人脸库
-//        int id=Integer.valueOf(String.format("%s%d",String.valueOf(EnjoyTools.GetTimestamp()).substring(8), new Random().nextInt(999)));
-//        int res = addOneFaceToDB(faceFeature,id);
-//        if (res>=0) {
-//            Helper.Log.write("addFaceImg", "该照片添加成功：" + cardNo);
-//        } else {
-//            Helper.Log.write("addFaceImg", "该照片添加失败：" + cardNo);
-//        }
-//
-//        //添加FaceCard库
+        int id=Integer.valueOf(String.format("%s%d",String.valueOf(EnjoyTools.GetTimestamp()).substring(8), new Random().nextInt(999)));
+        int res = addOneFaceToDB(faceFeature,id);
+        if (res>=0) {
+            Helper.Log.write("addFaceImg", "该照片添加成功：" + cardNo);
+        } else {
+            Helper.Log.write("addFaceImg", "该照片添加失败：" + cardNo);
+        }
+
+        //添加FaceCard库
 //        faceCard = new FaceCard();
 //        faceCard.setId(id);
 //        faceCard.setCardNo(cardNo);
@@ -441,10 +441,10 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
 //            e.printStackTrace();
 //            throw new EException("删除数据库失败");
 //        }
-//
-//        //添加照片
-//        copyFile(bmpFileName,VipImagePath,cardNo+".jpg");
-//
+
+        //添加照片
+        copyFile(bmpFileName,VipImagePath,cardNo+".jpg");
+
 
         return 0;
     }
@@ -581,11 +581,11 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
         this.brushEvent=brushEvent;
         int res;
 
-//        res= mipsFaceService.startDetect(getBaseContext(),licPath,1280,720,
-//                    null,mVidioViewHolder,
-//                    rotation,getAssets(),"2",VipImagePath);
-        res= mipsFaceService.startDetect(getApplicationContext(), licPath, 1280, 720,
-                mVidioViewHolder,null, 3,getAssets(),"2");
+        res= mipsFaceService.startDetect(getBaseContext(),licPath,1280,720,
+                    mVidioViewHolder,null,
+                    rotation,getAssets(),"2",VipImagePath);
+//        res= mipsFaceService.startDetect(getApplicationContext(), licPath, 1280, 720,
+//                mVidioViewHolder,null, 3,getAssets(),"2");
         if (res>=0)
         {
             mOverlayCamera=faceCanvas;

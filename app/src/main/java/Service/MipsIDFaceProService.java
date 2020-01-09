@@ -49,6 +49,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     private WindowManager windowManager;
     private SurfaceView surfaceView;
     protected MIPSCamera mMipsCameera=null;
+    private String VipImagePath="";
 
     protected MIPSCamera mMipsCameeraIR=null;
     //protected Camera mCamera = null;
@@ -592,10 +593,13 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
         return 0;
     }
 
-    public int startDetect(Context context, String licPath, int width, int height, SurfaceHolder holder, SurfaceHolder holderIR,
-                           int rotation, AssetManager assetManager,String choose_alg)
+    public int startDetect(Context context, String licPath, int width, int height,
+                           SurfaceHolder holder, SurfaceHolder holderIR,
+                           int rotation, AssetManager assetManager, String choose_alg,
+                           String VIP_ImagePath)
     {
         int ret=0;
+        VipImagePath = VIP_ImagePath;
         if(((PREVIEW_WIDTH!= width) || (PREVIEW_HEIGHT!=height)))
         {
             if(mfaceTrackLiveness == null)
@@ -899,6 +903,57 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
 
         return -1;
     }
+    public boolean saveBitmapAsFile(String dir,String name, Bitmap bitmap) {
+        File file = null;
+        try {
+            file = new File(dir);
+            if (!file.exists()) {
+                file.mkdir();
+            }
+        } catch (Exception e) {
+            android.util.Log.d("error:", e+"");
+        }
+
+
+        File saveFile = new File(dir, name);
+
+        boolean saved = false;
+        FileOutputStream os = null;
+        try {
+            Log.d("FileCache", "Saving File To Cache " + saveFile.getPath());
+            os = new FileOutputStream(saveFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, os);
+            os.flush();
+            os.close();
+            saved = true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return saved;
+    }
+
+    public int addPhotoToDB(Context context,mipsFaceVipDB vipFac)
+    {
+        lockFaceInfo.lock();
+        try {
+            String fName=vipFac.imagePath;
+            vipFac.imagePath=VipImagePath+"/"+fName+".jpg";
+            int res=mfaceTrackLiveness.addOneFaceToDB(this, vipFac);
+            if (res>=0)
+            {
+                saveBitmapAsFile(VipImagePath,fName+".jpg", vipFac.sourceBitmapFace);
+            }
+            return res;
+        }
+        finally {
+            lockFaceInfo.unlock();
+        }
+    }
+
     /**
      * 复制单个文件
      * @param oldPath String 原文件路径 如：c:/fqf.txt
@@ -1005,7 +1060,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     }
 
     //获取VIP人脸校验状态
-    public int mipsAddVipFace(Context context,String imagePath)
+    public int mipsAddVipFace(Context context, String imagePath)
     {
         lockFaceInfo.lock();
 
@@ -1024,9 +1079,9 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             //for test
             //mfaceTrackLiveness.saveFaceDB(VIP_DB_PATH+"mipsVipFaceDB");
             //
-            String path = Environment.getExternalStorageDirectory().getPath()+"/faceVIP/image" + '/' + (vip_face_cnt) + ".jpg";
-            copyFile(imagePath, path);
-            mFaceVipDBArray[idx].imagePath = path;
+            String imgpath = VipImagePath+"/" + (vip_face_cnt) + ".jpg";
+            copyFile(imagePath, imgpath);
+            mFaceVipDBArray[idx].imagePath = imgpath;
             vip_face_cnt++;
             ret = 0;
         }

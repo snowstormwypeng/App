@@ -3,6 +3,7 @@ package Helper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,6 +22,10 @@ public class EnjoyTools {
 
     public static byte[] encrypt(byte[] InData, byte[] Key) throws Exception {
         return AESKeyModel.encrypt(InData, Key);
+    }
+
+    public static long GetTimestamp() {
+        return new Date().getTime();
     }
 
     /**
