@@ -333,7 +333,8 @@ public class FaceCanvasView extends ImageView {
 					if (faceinfo.FaceIdxDB >= 0) {
 //						FaceCardDataAccess faceCardDataAccess = new FaceCardDataAccess(ctx);
 //						FaceCard faceCard = faceCardDataAccess.queryById(Integer.valueOf(faceinfo.name));
-						//name = "会员:" + faceCard.getCardNo();
+//						name = "会员:" + faceCard.getCardNo();
+						name = "会员:" + faceinfo.name;
 //					name += faceinfo.name;
 //					name += ",";
 //					//name += "相似度:"+faceinfo.mfaceSimilarity;
