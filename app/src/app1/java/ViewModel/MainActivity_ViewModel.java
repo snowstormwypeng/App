@@ -51,11 +51,11 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     private FaceDevice faceDevice;
 
     IAopDemo demo=Factory.GetInstance(AopDemo.class,new Object[]{this});
-    public MainActivity_ViewModel(Context base) {
+    public MainActivity_ViewModel(Context base,View view) {
         super(base);
         try {
             faceDevice = new FaceDevice(this);
-            img= ((ActivityMain)getBaseContext()).findViewById(R.id.FaceImg);
+            img= view.findViewById(R.id.FaceImg);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -115,12 +115,18 @@ public class MainActivity_ViewModel extends Base_ViewModel {
         }
         @Override
         public void call(final FaceEntity faceEntity) {
-            return;
+            if (faceEntity.getFaceInfo().flgLiveness==1 && faceEntity.getFaceInfo().flgSetLiveness==1 &&
+                faceEntity.getFaceInfo().flgSetVIP==1)
+            {
+                img.setImageBitmap(faceEntity.getFaceInfo().mfaceFeature.mBitmapFace);
+//                faceDevice.mipsFaceService.saveBitmapAsFile(path,
+//                        String.format("%s.jpg", PublicDefine.enjoyCard.GetCardNo() + ""),
+            }
 //            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
 //            if (sourceBitmapFace != null) {
-//                //img.setImageBitmap(sourceBitmapFace);
+//                img.setImageBitmap(sourceBitmapFace);
 //            }
-//
+
 //            if (faceEntity.isVip()) {
 //
 //                Message m=new Message();
@@ -212,7 +218,36 @@ public class MainActivity_ViewModel extends Base_ViewModel {
             Msgbox.Show(this.getBaseContext(), String.format("删除失败[%d]",res));
         }
     }
+    private int flg=0;
 
+    Thread AddThread=new Thread(new Runnable() {
+        @Override
+        public void run() {
+          while (flg==0)
+          {
+              faceDevice.deleteAllFaceFrDB();
+                Message msg=new Message();
+                msg.obj=new IAsynListener() {
+                    @Override
+                    public void onFinish(Object sender, Object data) {
+                        String path="/storage/emulated/0/app1/faceVIP/2659958626.jpg";
+                        AddVipImg(path);
+                    }
+
+                    @Override
+                    public void onError(Object sender, Exception e) {
+
+                    }
+                };
+              mHandler.sendMessage(msg);
+              try {
+                  Thread.sleep(5000);
+              } catch (InterruptedException e) {
+                  e.printStackTrace();
+              };
+          }
+        }
+    });
 
     public void Btn_AddVip_OnClick(View view)
     {
@@ -220,12 +255,13 @@ public class MainActivity_ViewModel extends Base_ViewModel {
         photoPickerIntent.setType("image/*");
         int requestCode=1;
         ((ActivityMain)getBaseContext()).startActivityForResult(photoPickerIntent, 1);
+        String path="/storage/emulated/0/app1/faceVIP/2659958626.jpg";
+        AddVipImg(path);
+        //AddThread.start();
     }
 
     public void AddVipImg(String imgpath)
     {
-
-
         try {
             int vid=faceDevice.addFaceImg(imgpath,"2659958626",null);
             //faceDevice.mipsUninit();

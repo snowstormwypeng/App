@@ -214,8 +214,9 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             });
         }
         if(mMipsCameera != null ){
-            //mMipsCameera.openCamera1(CameraInfo.CAMERA_FACING_BACK);
-            mMipsCameera.openCamera1(MIPSCamera.CameraFacing);
+            mMipsCameera.openCamera1(CameraInfo.CAMERA_FACING_BACK);
+            //mMipsCameera.openCamera1(MIPSCamera.CameraFacing);
+
         }
 
 

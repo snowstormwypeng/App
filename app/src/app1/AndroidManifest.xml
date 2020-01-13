@@ -2,7 +2,7 @@
 
     <application>
         <activity
-            android:name="enjoy.activitys.Main2Activity"
+            android:name="enjoy.activitys.MainActivity"
             android:label="@string/title_activity_main2"
             android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>

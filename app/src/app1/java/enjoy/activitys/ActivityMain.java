@@ -3,12 +3,14 @@ package enjoy.activitys;
 import android.content.Intent;
 import android.database.Cursor;
 import android.databinding.DataBindingUtil;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import BaseActivity.BaseActivity;
 import ViewModel.MainActivity_ViewModel;
@@ -44,9 +46,11 @@ public class ActivityMain extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        viewModel=new MainActivity_ViewModel(this);
+
         ActivityMainBinding dataBinding =DataBindingUtil.setContentView(this,R.layout.activity_main);
+        viewModel=new MainActivity_ViewModel(this,dataBinding.getRoot());
         dataBinding.setViewModel(viewModel);
+
         viewModel.pushActivity(this);
 
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -68,9 +72,6 @@ public class ActivityMain extends BaseActivity {
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
             viewModel.AddVipImg(picturePath);
-
-
-
         }
 
     }
