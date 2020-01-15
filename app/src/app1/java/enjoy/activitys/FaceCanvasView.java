@@ -290,17 +290,17 @@ public class FaceCanvasView extends ImageView {
 					mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.bottom) * mYRatio;
 					mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.top) * mYRatio;
 				} else if (flgPortrait == 3) {
-					if (BuildConfig.FLAVOR.equals("tv800")){
+					//if (BuildConfig.FLAVOR.equals("tv800")){
 						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio;
 						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio;
 						mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.right) * mYRatio;
 						mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.left) * mYRatio;
-					} else {
-						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio + 50*mYRatio;
-						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio + 80*mYRatio;
-						mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.right * mYRatio + 50*mYRatio;
-						mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.left * mYRatio - 100*mYRatio;
-					}
+//					} else {
+//						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio + 50*mYRatio;
+//						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio + 80*mYRatio;
+//						mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.right * mYRatio + 50*mYRatio;
+//						mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.left * mYRatio - 100*mYRatio;
+//					}
 				}
 				mDrawFaceRect.top = mDrawFaceRect.top - 20 * mXRatio;
 				mDrawFaceRect.left = mDrawFaceRect.left - 10 * mXRatio;

@@ -1235,7 +1235,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     public void mipsSetTrackReversePortrait()
     {
         if(mfaceTrackLiveness != null) {
-            mfaceTrackLiveness.mipsSetTrackPortrait();
+            mfaceTrackLiveness.mipsSetTrackReversePortrait();
             if(mMipsCameera != null) {
                 mMipsCameera.setCameraDisplayOrientation(3);
             }
