@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -86,10 +87,6 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     private int flgVipFaceVerInit=0;
     private long timeBak=0;
     private int framePerSec=0;
-    //private int midxDbVerify[];
-    //private int mTrackID[];
-    //private float faceSimilarity[];
-    //private CvAttributeResult mfaceAttributeArray[];
     private int flgFaceChange;
     PoseCallBack mPoseListener;
 
@@ -104,6 +101,8 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     private volatile boolean mIsTracking=false; // 是否正在进行track操作
     private String VIP_DB_PATH=null;//"/sdcard/mipsfacevip/";
     private int mtrackLivenessID=-1;
+    public int faceDiscern=1;
+    public Object synObj=new Object();
 
     @Nullable
     @Override
@@ -196,7 +195,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             mMipsCameera.setPreviewCallback(new PreviewCallback() {
                 @Override
                 public void onPreviewFrame(byte[] data, Camera camera) {
-                    if (data == null) {
+                    if (data == null ) {
                         return; // 切分辨率的过程中可能这个地方的data为空
                     }
                     if (!mIsTracking) {
@@ -214,8 +213,8 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             });
         }
         if(mMipsCameera != null ){
-            mMipsCameera.openCamera1(CameraInfo.CAMERA_FACING_BACK);
-            //mMipsCameera.openCamera1(MIPSCamera.CameraFacing);
+            mMipsCameera.openCamera1(CameraInfo.CAMERA_FACING_FRONT);
+
 
         }
 
@@ -452,6 +451,12 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
             public void run() {
                 try {
                     while (!killed) {
+                        if (faceDiscern==0)
+                        {
+                            synchronized (synObj) {
+                                synObj.wait();
+                            }
+                        }
                         if ((isNV21ready && isNV21readyIR && mipsGetFaceLivenessState() > 1)||
                                 (isNV21ready && mipsGetFaceLivenessState() < 2)) {
                             mIsTracking = true;
@@ -468,12 +473,16 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
                                     System.arraycopy(nv21IR, 0, tmpIR, 0, nv21IR.length);
                                 }
                                 lockFaceDb.lock();
-                                flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, tmpIR, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
+                                if (faceDiscern==1) {
+                                    flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, tmpIR, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
+                                }
                                 lockFaceDb.unlock();
                             }else
                             {
                                 lockFaceDb.lock();
-                                flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
+                                if (faceDiscern==1) {
+                                    flgFaceChange = mfaceTrackLiveness.mipsDetectOneFrame(tmp, PREVIEW_WIDTH, PREVIEW_HEIGHT, mtrackLivenessID);
+                                }
                                 lockFaceDb.unlock();
                             }
                           /*  if(true) {
@@ -1235,7 +1244,7 @@ public class MipsIDFaceProService extends Service implements SurfaceHolder.Callb
     public void mipsSetTrackReversePortrait()
     {
         if(mfaceTrackLiveness != null) {
-            mfaceTrackLiveness.mipsSetTrackReversePortrait();
+            mfaceTrackLiveness.mipsSetTrackPortrait();
             if(mMipsCameera != null) {
                 mMipsCameera.setCameraDisplayOrientation(3);
             }

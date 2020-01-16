@@ -74,9 +74,25 @@ public class MainActivity_ViewModel extends Base_ViewModel {
     public final ButtonBind Btn_DelAll=new ButtonBind("删除全部人脸库");
     public final ButtonBind Btn_AddVip=new ButtonBind("添加人脸");
     public final ButtonBind Btn_Facecount=new ButtonBind("当前人脸库数量");
+    public final ButtonBind Btn_Stop=new ButtonBind("停止");
+    public final ButtonBind Btn_Start=new ButtonBind("启动");
+
 
 
     private ImageView img;
+
+    public void Btn_Stop_OnClick(View view)
+    {
+        faceDevice.mipsFaceService.faceDiscern=0;
+    }
+    public void Btn_Start_OnClick(View view)
+    {
+        faceDevice.mipsFaceService.faceDiscern=1;
+        synchronized (faceDevice.mipsFaceService.synObj)
+        {
+            faceDevice.mipsFaceService.synObj.notify();
+        }
+    }
 
     public void Btn_Clear_OnClick(View view)
     {
@@ -111,16 +127,24 @@ public class MainActivity_ViewModel extends Base_ViewModel {
         @Override
         public void  faceEvent(int faceCnt)
         {
-
+            if (faceCnt==0)
+            {
+                img.setImageDrawable(null);
+            }
         }
         @Override
         public void call(final FaceEntity faceEntity) {
-            if (faceEntity.getFaceInfo().flgLiveness==1 && faceEntity.getFaceInfo().flgSetLiveness==1 &&
+            if (faceEntity.getFaceInfo()!=null && faceEntity.getFaceInfo().flgLiveness==1 && faceEntity.getFaceInfo().flgSetLiveness==1 &&
                 faceEntity.getFaceInfo().flgSetVIP==1)
             {
                 img.setImageBitmap(faceEntity.getFaceInfo().mfaceFeature.mBitmapFace);
 //                faceDevice.mipsFaceService.saveBitmapAsFile(path,
 //                        String.format("%s.jpg", PublicDefine.enjoyCard.GetCardNo() + ""),
+            }
+            else
+            {
+
+                img.setImageDrawable(null);
             }
 //            Bitmap sourceBitmapFace = BitmapFactory.decodeFile(faceEntity.getImgPath());
 //            if (sourceBitmapFace != null) {

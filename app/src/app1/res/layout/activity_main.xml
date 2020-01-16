@@ -108,6 +108,19 @@
             android:onClick="@{viewModel::Btn_Gate_OnClick}"
             />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Stop.Text}"
+            android:onClick="@{viewModel::Btn_Stop_OnClick}"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@{viewModel.Btn_Start.Text}"
+            android:onClick="@{viewModel::Btn_Start_OnClick}"
+            />
+
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"

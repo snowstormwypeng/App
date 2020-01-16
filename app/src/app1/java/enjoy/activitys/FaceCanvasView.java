@@ -291,15 +291,15 @@ public class FaceCanvasView extends ImageView {
 					mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.top) * mYRatio;
 				} else if (flgPortrait == 3) {
 					//if (BuildConfig.FLAVOR.equals("tv800")){
-						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio;
-						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio;
-						mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.right) * mYRatio;
-						mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.left) * mYRatio;
+//						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio;
+//						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio;
+//						mDrawFaceRect.top = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.right) * mYRatio;
+//						mDrawFaceRect.bottom = mOverRect.top + (float) (mCameraHeight - faceinfo.faceRect.left) * mYRatio;
 //					} else {
-//						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio + 50*mYRatio;
-//						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio + 80*mYRatio;
-//						mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.right * mYRatio + 50*mYRatio;
-//						mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.left * mYRatio - 100*mYRatio;
+						mDrawFaceRect.left = mOverRect.left + (float) (faceinfo.faceRect.top) * mXRatio + 50*mYRatio;
+						mDrawFaceRect.right = mOverRect.left + (float) (faceinfo.faceRect.bottom) * mXRatio + 80*mYRatio;
+						mDrawFaceRect.top = mOverRect.top + (float) faceinfo.faceRect.right * mYRatio + 50*mYRatio;
+						mDrawFaceRect.bottom = mOverRect.top + (float) faceinfo.faceRect.left * mYRatio - 100*mYRatio;
 //					}
 				}
 				mDrawFaceRect.top = mDrawFaceRect.top - 20 * mXRatio;
@@ -390,7 +390,10 @@ public class FaceCanvasView extends ImageView {
 //						name += "ms";
 //					}
 //				}
-
+                    if(faceinfo.flgLiveness > 0) {
+                        name += "活体:"+faceinfo.flgLiveness;
+                        name += "ms,";
+                    }
 
 					if (faceinfo.flgSetAttr == 1) {
 						String analysisInfo = getGenderAgeInfo(faceinfo);
@@ -404,8 +407,8 @@ public class FaceCanvasView extends ImageView {
 //				{
 //					String name1 = "";
 //					if(faceinfo.LivenessTimeDebug > 0) {
-//						name1 += "活体:"+faceinfo.LivenessTimeDebug;
-//						name1 += "ms,";
+//						name += "活体:"+faceinfo.LivenessTimeDebug;
+//						name += "ms,";
 //					}
 //					if(faceinfo.vipTimeDebug > 0) {
 //						name1 += "vip:"+faceinfo.vipTimeDebug;

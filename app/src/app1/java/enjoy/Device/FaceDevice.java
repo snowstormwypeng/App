@@ -7,33 +7,23 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Rect;
-import android.hardware.Camera;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
 
 import com.smdt.facesdk.mipsFaceFeature;
 import com.smdt.facesdk.mipsFaceInfoTrack;
 import com.smdt.facesdk.mipsFaceVerifyInfo;
 import com.smdt.facesdk.mipsFaceVipDB;
-import com.smdt.facesdk.mipsVideoFaceTrack;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import Exceptions.EException;
 import Helper.EnjoyTools;
@@ -595,7 +585,10 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
                 mipsFaceService.mfaceTrackLiveness.mipsSetTrackPortrait();
             }
             //mipsFaceService.mfaceTrackLiveness.mipsSetTrackReversePortrait();
-            mipsFaceService.mfaceTrackLiveness.mipsSetPitchAngle(15f);
+            mipsFaceService.mfaceTrackLiveness.mipsSetPitchAngle(60f);
+            mipsFaceService.mfaceTrackLiveness.mipsSetYawAngle(30f);
+            mipsFaceService.mfaceTrackLiveness.mipsSetRollAngle(30f);
+
             mipsFaceService.mfaceTrackLiveness.mipsDisableFaceVerifyArea();
             mipsFaceService.mfaceTrackLiveness.mipsSetMaxVipVerifyCntThrehold(3);
 
@@ -620,7 +613,7 @@ public class FaceDevice extends ContextWrapper implements ServiceConnection {
     @Override
     public void onServiceConnected(ComponentName componentName, IBinder service) {
         MipsIDFaceProService.Binder binder = (MipsIDFaceProService.Binder) service;
-        mipsFaceService = binder.getService();
+        mipsFaceService =binder.getService();
         mipsFaceService.registPoseCallback(new MipsIDFaceProService.PoseCallBack() {
             @Override
             public void onPosedetected(final String flag, final int curFaceCnt, final int cntFaceDB, final mipsFaceInfoTrack[] faceInfo)
